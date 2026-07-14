@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  checks:
+    name: Typecheck, lint, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+
+  # Not run automatically: e2e tests register real users against the live Supabase
+  # project (there is currently no separate CI/staging project), and Supabase's
+  # built-in email service has a low rate limit that repeated CI runs would exhaust.
+  # Trigger manually from the Actions tab once VITE_SUPABASE_URL and
+  # VITE_SUPABASE_ANON_KEY are added as repo secrets.
+  e2e:
+    name: End-to-end tests (manual)
+    if: false
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

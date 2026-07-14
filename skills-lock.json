@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "hebrew-saas-starter-by-jack-vidal": {
+      "source": "jackvidal/hebrew-saas-starter-by-jack-vidal",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "950f9e0b208c6a4d75440883299933c9ff68cda6d1b7487474014327597fe3ac"
+    }
+  }
+}
