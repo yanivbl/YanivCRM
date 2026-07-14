@@ -133,8 +133,37 @@ Deno.serve(async (req: Request) => {
   const content = stripHtml(html).slice(0, MAX_CONTENT_CHARS);
   if (!content) return await fail('No readable content found on the page');
 
-  let toolInput: Record<string, unknown>;
-  try {
+  // Claude sometimes collapses a single-point list field into a plain string
+  // instead of a one-element array, and on unusual (non-prose, repetitive)
+  // page content occasionally emits pseudo-XML <item> tags inside that string
+  // instead of separate array elements — both observed empirically against
+  // real sites. Normalize rather than reject, since the content is still valid.
+  function toStringArray(value: unknown): string[] | null {
+    if (Array.isArray(value)) {
+      const strings = value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+      return strings.length > 0 ? strings : null;
+    }
+    if (typeof value === 'string' && value.trim().length > 0) {
+      const itemMatches = [...value.matchAll(/<item>([\s\S]*?)<\/item>/gi)]
+        .map((m) => m[1].trim())
+        .filter(Boolean);
+      if (itemMatches.length > 0) return itemMatches;
+      return [value.trim()];
+    }
+    return null;
+  }
+
+  function normalizeAnalysis(input: any): Record<string, unknown> | null {
+    if (!input || typeof input.business_summary !== 'string' || !input.business_summary.trim()) return null;
+    const issues = toStringArray(input.issues);
+    const opportunities = toStringArray(input.opportunities);
+    const recommended_services = toStringArray(input.recommended_services);
+    const next_steps = toStringArray(input.next_steps);
+    if (!issues || !opportunities || !recommended_services || !next_steps) return null;
+    return { business_summary: input.business_summary.trim(), issues, opportunities, recommended_services, next_steps };
+  }
+
+  async function callClaude(): Promise<{ toolInput?: Record<string, unknown>; error?: string }> {
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -144,7 +173,7 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-5',
-        max_tokens: 2000,
+        max_tokens: 3072,
         system: SYSTEM_PROMPT,
         tools: [ANALYSIS_TOOL],
         tool_choice: { type: 'tool', name: 'submit_analysis' },
@@ -159,13 +188,38 @@ Deno.serve(async (req: Request) => {
 
     if (!claudeRes.ok) {
       const errText = await claudeRes.text();
-      return await fail(`AI analysis request failed: ${claudeRes.status} ${errText.slice(0, 300)}`);
+      return { error: `AI analysis request failed: ${claudeRes.status} ${errText.slice(0, 300)}` };
     }
 
     const claudeJson = await claudeRes.json();
-    const toolUseBlock = (claudeJson.content ?? []).find((b: any) => b.type === 'tool_use' && b.name === 'submit_analysis');
-    if (!toolUseBlock) return await fail('AI response did not include a structured analysis');
-    toolInput = toolUseBlock.input;
+    const toolUseBlock = (claudeJson.content ?? []).find(
+      (b: any) => b.type === 'tool_use' && b.name === 'submit_analysis'
+    );
+    if (!toolUseBlock) return { error: 'AI response did not include a structured analysis' };
+    return { toolInput: toolUseBlock.input };
+  }
+
+  let toolInput: Record<string, unknown> | undefined;
+  let lastError = 'AI response did not match the expected format';
+  try {
+    // Tool-forced calls occasionally still deviate from the requested schema on messy
+    // scraped content (e.g. dumping everything into one field as pseudo-XML text
+    // instead of separate arrays) — normalize what we can, and retry once for the
+    // cases that can't be salvaged (e.g. a field missing entirely).
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const result = await callClaude();
+      if (result.error) {
+        lastError = result.error;
+        continue;
+      }
+      const normalized = normalizeAnalysis(result.toolInput);
+      if (normalized) {
+        toolInput = normalized;
+        break;
+      }
+      lastError = 'AI response did not match the expected format';
+    }
+    if (!toolInput) return await fail(lastError);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return await fail(`AI analysis request failed: ${message}`);
