@@ -1,8 +1,10 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { captureException } from '../_shared/sentry.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const CAL_COM_WEBHOOK_SECRET = Deno.env.get('CAL_COM_WEBHOOK_SECRET')!;
+const SENTRY_DSN = Deno.env.get('SENTRY_DSN');
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
@@ -208,6 +210,7 @@ Deno.serve(async (req: Request) => {
       .from('webhook_events')
       .update({ error: message.slice(0, 1000) })
       .eq('id', webhookEventId);
+    await captureException(SENTRY_DSN, `cal-webhook: ${message}`, { triggerEvent, webhookEventId });
 
     // Always 200 on business-logic failures so Cal.com doesn't retry forever on an unmapped/malformed payload.
     return new Response(JSON.stringify({ ok: false, error: message }), { status: 200 });

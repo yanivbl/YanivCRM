@@ -1,8 +1,10 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { captureException } from '../_shared/sentry.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
+const SENTRY_DSN = Deno.env.get('SENTRY_DSN');
 const DAILY_ANALYSIS_LIMIT = 20;
 const SITE_FETCH_TIMEOUT_MS = 10_000;
 const MAX_CONTENT_CHARS = 15_000;
@@ -108,6 +110,7 @@ Deno.serve(async (req: Request) => {
       .from('website_analyses')
       .update({ status: 'failed', error_message: message.slice(0, 1000), completed_at: new Date().toISOString() })
       .eq('id', analysis.id);
+    await captureException(SENTRY_DSN, `ai-analyze: ${message}`, { analysisId: analysis.id, url });
     return new Response(JSON.stringify({ ok: false, error: message, analysis_id: analysis.id }), { status: 200 });
   };
 

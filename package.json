@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@fontsource/heebo": "^5.2.8",
+    "@sentry/react": "^10.65.0",
     "@supabase/supabase-js": "^2.110.3",
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
