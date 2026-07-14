@@ -22,14 +22,12 @@ jobs:
       - run: npm run test
       - run: npm run build
 
-  # Not run automatically: e2e tests register real users against the live Supabase
-  # project (there is currently no separate CI/staging project), and Supabase's
-  # built-in email service has a low rate limit that repeated CI runs would exhaust.
-  # Trigger manually from the Actions tab once VITE_SUPABASE_URL and
-  # VITE_SUPABASE_ANON_KEY are added as repo secrets.
+  # Runs against a dedicated "yanivcrm-test" Supabase project (not the production
+  # project), so repeated CI runs registering real test users don't exhaust the
+  # shared email rate limit. VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY point at
+  # that test project via repo secrets.
   e2e:
-    name: End-to-end tests (manual)
-    if: false
+    name: End-to-end tests
     runs-on: ubuntu-latest
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}

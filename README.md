@@ -22,7 +22,7 @@ npm run dev
 | `npm run build` | Type-check + production build |
 | `npm run lint` | Lint with oxlint |
 | `npm run test` | Unit tests (Vitest) |
-| `npm run test:e2e` | End-to-end tests (Playwright) — registers real users against your Supabase project |
+| `npm run test:e2e` | End-to-end tests (Playwright) — registers real users; point `.env.local` at a disposable test Supabase project, never production |
 
 ## Architecture
 
@@ -31,6 +31,10 @@ npm run dev
   - `cal-webhook` — public, HMAC-signature-verified receiver for Cal.com booking events (create/cancel/reschedule). Idempotent via a `webhook_events` log; auto-manages lead status.
   - `ai-analyze` — authenticated endpoint that fetches a lead's website and asks Claude for a structured Hebrew analysis (summary, issues, opportunities, recommended services, next steps).
 - **SQL migrations** live in `supabase/sql/` and were applied via the Supabase MCP server / Management API, in the order they're numbered.
+
+## CI
+
+`.github/workflows/ci.yml` runs typecheck/lint/unit-tests/build on every push and PR. A separate `e2e` job runs the Playwright suite against a dedicated `yanivcrm-test` Supabase project (same schema, no real data) — kept separate from the production project so repeated test-account registrations never risk the shared email rate limit. Needs `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` set as repo secrets pointing at that test project.
 
 ## Environment variables
 
