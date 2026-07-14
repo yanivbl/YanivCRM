@@ -15,12 +15,18 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'npm run dev',
+    // Serve a production build, not the dev server: Vite's dev server compiles
+    // modules on demand per request, and on a cold CI runner (no warm esbuild
+    // dependency-bundling cache) the very first page load can take well past
+    // a test's timeout — every test failed on this, including ones with zero
+    // backend interaction. A built + previewed app serves pre-compiled static
+    // assets instantly, which is also closer to what actually ships anyway.
+    command: 'npm run build && npm run preview -- --port 5173',
     url: 'http://localhost:5173',
-    // Reusing a stale, already-running dev server (e.g. left over from manual
+    // Reusing a stale, already-running server (e.g. left over from manual
     // testing) silently serves stale env vars — never safe in CI, and only
     // worth the speed tradeoff locally.
     reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
+    timeout: 60_000,
   },
 });
