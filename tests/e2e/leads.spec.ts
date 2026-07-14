@@ -32,16 +32,19 @@ test.describe.serial('lead CRUD', () => {
     await page.click('button:has-text("יצירה")');
 
     await page.waitForURL('**/leads');
-    await expect(page.getByText(leadName)).toBeVisible();
+    // The desktop table and mobile card both render in the DOM at once (CSS
+    // hides whichever doesn't match the viewport) — .first() picks either
+    // consistently rather than hitting a strict-mode multi-match error.
+    await expect(page.getByText(leadName).first()).toBeVisible();
   });
 
   test('finds the lead via search and status filter', async ({ page }) => {
     await page.goto('/leads');
     await page.fill('input[type="search"]', 'בדיקה אוטומטית');
-    await expect(page.getByText(leadName)).toBeVisible();
+    await expect(page.getByText(leadName).first()).toBeVisible();
 
     await page.selectOption('select[aria-label="סינון לפי סטטוס"]', 'new');
-    await expect(page.getByText(leadName)).toBeVisible();
+    await expect(page.getByText(leadName).first()).toBeVisible();
 
     await page.selectOption('select[aria-label="סינון לפי סטטוס"]', 'closed');
     await expect(page.getByText('לא נמצאו תוצאות')).toBeVisible();
@@ -49,7 +52,7 @@ test.describe.serial('lead CRUD', () => {
 
   test('edits the lead and reflects the change on the detail page', async ({ page }) => {
     await page.goto('/leads');
-    await page.getByText(leadName).click();
+    await page.getByText(leadName).first().click();
     await page.waitForTimeout(500);
 
     await page.getByRole('link', { name: 'עריכה' }).click();
@@ -66,6 +69,9 @@ test.describe.serial('lead CRUD', () => {
     await page.fill('input[type="search"]', 'בדיקה אוטומטית');
     await page.locator('table button:has-text("מחיקה")').click();
     await page.getByRole('button', { name: 'כן, מחק' }).click();
+    // Wait for the confirm dialog itself to close — its own text also contains
+    // the lead name, so asserting absence too early sees a stale extra match.
+    await expect(page.getByText('האם אתה בטוח שברצונך למחוק')).not.toBeVisible();
     await expect(page.getByText(leadName)).not.toBeVisible();
   });
 });
