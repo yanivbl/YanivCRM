@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { register, uniqueEmail } from './helpers';
+import { register, uniqueEmail, TEST_PASSWORD } from './helpers';
 
 test.describe.serial('lead CRUD', () => {
   const email = uniqueEmail('e2e-leads');
@@ -14,7 +14,7 @@ test.describe.serial('lead CRUD', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
     await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', 'Test1234!');
+    await page.fill('input[name="password"]', TEST_PASSWORD);
     await page.click('button[type="submit"]');
     await page.waitForURL('**/');
   });

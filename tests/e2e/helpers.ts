@@ -4,7 +4,10 @@ export function uniqueEmail(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}@example.com`;
 }
 
-export const TEST_PASSWORD = 'Test1234!';
+// Not a memorable/common password: registration now checks passwords against
+// HaveIBeenPwned client-side, and 'Test1234!'-style test passwords are
+// themselves in real breach corpora, which would fail every e2e signup.
+export const TEST_PASSWORD = 'Qz778xdbTMxVnHX!';
 
 export async function register(page: Page, email: string, fullName = 'משתמש בדיקה') {
   await page.goto('/register');

@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { TextField } from '../ui/TextField';
 import { Button } from '../ui/Button';
+import { isPasswordPwned } from '../../utils/pwnedPassword';
 
 export function RegisterForm() {
   const { signUp } = useAuth();
@@ -24,6 +25,20 @@ export function RegisterForm() {
     }
 
     setSubmitting(true);
+
+    // Supabase's built-in leaked-password check requires a Pro plan; this
+    // replicates it client-side against the free HaveIBeenPwned API. Fail
+    // open on network errors — an HIBP outage shouldn't block registration.
+    try {
+      if (await isPasswordPwned(password)) {
+        setSubmitting(false);
+        setError('הסיסמה הזו נחשפה בעבר בדליפות מידע. בחר/י סיסמה אחרת.');
+        return;
+      }
+    } catch {
+      // ignore — proceed with registration
+    }
+
     const { error } = await signUp(email, password, fullName);
     setSubmitting(false);
 
