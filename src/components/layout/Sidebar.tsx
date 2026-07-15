@@ -1,11 +1,13 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, UserPlus, Activity, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 
 const NAV_ITEMS = [
   { to: '/', label: 'לוח בקרה', icon: LayoutDashboard, end: true },
   { to: '/leads', label: 'לידים', icon: Users, end: false },
+  { to: '/team', label: 'צוות', icon: UserPlus, end: false },
+  { to: '/activity', label: 'פעילות', icon: Activity, end: false },
 ];
 
 function initialsOf(name: string) {

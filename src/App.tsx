@@ -10,6 +10,8 @@ import { LeadsListPage } from './pages/LeadsListPage';
 import { LeadNewPage } from './pages/LeadNewPage';
 import { LeadEditPage } from './pages/LeadEditPage';
 import { LeadDetailPage } from './pages/LeadDetailPage';
+import { TeamPage } from './pages/TeamPage';
+import { ActivityLogPage } from './pages/ActivityLogPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 function App() {
@@ -27,6 +29,8 @@ function App() {
               <Route path="/leads/new" element={<LeadNewPage />} />
               <Route path="/leads/:id" element={<LeadDetailPage />} />
               <Route path="/leads/:id/edit" element={<LeadEditPage />} />
+              <Route path="/team" element={<TeamPage />} />
+              <Route path="/activity" element={<ActivityLogPage />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFoundPage />} />

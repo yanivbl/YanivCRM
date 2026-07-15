@@ -1,11 +1,13 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, UserPlus, Activity, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 
 const NAV_ITEMS = [
   { to: '/', label: 'לוח בקרה', icon: LayoutDashboard, end: true },
   { to: '/leads', label: 'לידים', icon: Users, end: false },
+  { to: '/team', label: 'צוות', icon: UserPlus, end: false },
+  { to: '/activity', label: 'פעילות', icon: Activity, end: false },
 ];
 
 export function MobileNav() {
@@ -20,14 +22,14 @@ export function MobileNav() {
 
   return (
     <header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2 md:hidden">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 overflow-x-auto">
         {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium ${
+              `flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium ${
                 isActive ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600'
               }`
             }

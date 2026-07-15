@@ -9,6 +9,8 @@ const SENTRY_DSN = Deno.env.get('SENTRY_DSN');
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
 const ACTIVE_LEAD_STATUSES = new Set(['new', 'contact_scheduled', 'follow_up']);
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_EVENTS = 60;
 
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -66,11 +68,26 @@ Deno.serve(async (req: Request) => {
   }
 
   const externalId = `${triggerEvent}:${booking.uid}`;
+  const organizerEmailForLimit: string | undefined = booking.organizer?.email?.toLowerCase();
+
+  // Rate limit per organizer, not globally: protects against a misbehaving/looping
+  // Cal.com integration hammering the DB, without punishing other organizers sharing this endpoint.
+  if (organizerEmailForLimit) {
+    const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+    const { count: recentCount } = await supabase
+      .from('webhook_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('organizer_email', organizerEmailForLimit)
+      .gte('created_at', windowStart);
+    if ((recentCount ?? 0) >= RATE_LIMIT_MAX_EVENTS) {
+      return new Response(JSON.stringify({ ok: false, error: 'Rate limit exceeded' }), { status: 200 });
+    }
+  }
 
   // Idempotency guard: unique(source, external_id) rejects a replayed delivery.
   const { data: insertedEvent, error: eventInsertError } = await supabase
     .from('webhook_events')
-    .insert({ source: 'cal.com', external_id: externalId, payload: body })
+    .insert({ source: 'cal.com', external_id: externalId, payload: body, organizer_email: organizerEmailForLimit })
     .select('id')
     .single();
 

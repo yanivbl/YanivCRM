@@ -24,6 +24,9 @@ playwright/.cache
 # Claude Code session-internal state
 .claude/
 
+# Supabase CLI local-only state (which project ref is linked)
+supabase/.temp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
