@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { TextField } from '../ui/TextField';
@@ -38,15 +38,20 @@ export function LoginForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <TextField
-        label="סיסמה"
-        type="password"
-        name="password"
-        autoComplete="current-password"
-        required
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+      <div className="flex flex-col gap-1">
+        <TextField
+          label="סיסמה"
+          type="password"
+          name="password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <Link to="/forgot-password" className="self-end text-xs font-medium text-blue-600 hover:underline">
+          שכחת סיסמה?
+        </Link>
+      </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <Button type="submit" disabled={submitting}>
         {submitting ? 'מתחבר...' : 'התחברות'}
