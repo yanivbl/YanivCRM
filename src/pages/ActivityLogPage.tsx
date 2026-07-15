@@ -3,6 +3,7 @@ import { useCurrentOrg } from '../hooks/useCurrentOrg';
 import { useOrgActivityLog, type OrgActivityLogEntry } from '../hooks/useOrgActivityLog';
 import { formatDate } from '../utils/formatters';
 import { STATUS_LABELS, SOURCE_LABELS, type LeadStatus, type LeadSource } from '../types/lead';
+import { ROLE_LABELS, type Role } from '../types/organization';
 import { Spinner } from '../components/ui/Spinner';
 
 function describe(entry: OrgActivityLogEntry): string {
@@ -14,6 +15,26 @@ function describe(entry: OrgActivityLogEntry): string {
     const from = entry.details?.from as LeadStatus | undefined;
     const to = entry.details?.to as LeadStatus | undefined;
     if (from && to) return `הסטטוס שונה מ"${STATUS_LABELS[from]}" ל"${STATUS_LABELS[to]}"`;
+  }
+  if (entry.action === 'member_invited') {
+    const email = entry.details?.email;
+    const role = entry.details?.role as Role | undefined;
+    return email && role ? `${email} הוזמן/ה כ${ROLE_LABELS[role]}` : 'חבר צוות הוזמן';
+  }
+  if (entry.action === 'member_joined') {
+    const role = entry.details?.role as Role | undefined;
+    const who = entry.actor_name ?? 'חבר צוות חדש';
+    return role ? `${who} הצטרף/ה לצוות כ${ROLE_LABELS[role]}` : `${who} הצטרף/ה לצוות`;
+  }
+  if (entry.action === 'member_role_changed') {
+    const from = entry.details?.from as Role | undefined;
+    const to = entry.details?.to as Role | undefined;
+    const who = entry.target_name ?? 'חבר צוות';
+    if (from && to) return `התפקיד של ${who} שונה מ${ROLE_LABELS[from]} ל${ROLE_LABELS[to]}`;
+  }
+  if (entry.action === 'member_removed') {
+    const who = entry.target_name ?? 'חבר צוות';
+    return `${who} הוסר/ה מהארגון`;
   }
   return entry.action;
 }

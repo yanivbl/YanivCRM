@@ -91,10 +91,25 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  // Logged before sending: inviteUserByEmail creates the auth user (and fires the
+  // member_joined trigger) synchronously as part of the call below, so logging
+  // "invited" afterwards would always land after "joined" in the audit trail.
+  // Best-effort: a failed audit-log write shouldn't fail an otherwise-successful invite.
+  await admin
+    .from('activity_log')
+    .insert({ org_id: orgId, actor_id: user.id, action: 'member_invited', details: { email, role } });
+
   const { error: authInviteError } = await admin.auth.admin.inviteUserByEmail(email);
   if (authInviteError) {
-    // Roll back the invitation row so a failed send doesn't block a future retry.
+    // Roll back the invitation row (and the activity log entry) so a failed send
+    // doesn't block a future retry or leave a misleading audit entry.
     await admin.from('invitations').delete().eq('org_id', orgId).eq('email', email).is('accepted_at', null);
+    await admin
+      .from('activity_log')
+      .delete()
+      .eq('org_id', orgId)
+      .eq('action', 'member_invited')
+      .contains('details', { email });
     const message =
       authInviteError.message?.includes('already been registered') || authInviteError.code === 'email_exists'
         ? 'This email already has an account. They cannot currently be added to a second organization.'

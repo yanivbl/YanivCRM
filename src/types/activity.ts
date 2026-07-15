@@ -1,4 +1,10 @@
-export type ActivityAction = 'lead_created' | 'status_changed';
+export type ActivityAction =
+  | 'lead_created'
+  | 'status_changed'
+  | 'member_invited'
+  | 'member_joined'
+  | 'member_role_changed'
+  | 'member_removed';
 
 export interface ActivityLogEntry {
   id: string;
