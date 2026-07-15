@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { captureException } from '../_shared/sentry.ts';
+import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -37,13 +38,17 @@ function stripHtml(html: string): string {
 }
 
 Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return jsonResponse({ error: 'Method not allowed' }, 405);
   }
 
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'Missing Authorization header' }), { status: 401 });
+    return jsonResponse({ error: 'Missing Authorization header' }, 401);
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -54,20 +59,20 @@ Deno.serve(async (req: Request) => {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return new Response(JSON.stringify({ error: 'Invalid session' }), { status: 401 });
+    return jsonResponse({ error: 'Invalid session' }, 401);
   }
 
   let body: any;
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 });
+    return jsonResponse({ error: 'Invalid JSON' }, 400);
   }
 
   const url: string | undefined = body.url;
   const leadId: string | null = body.lead_id ?? null;
   if (!url || !/^https?:\/\/.+/i.test(url)) {
-    return new Response(JSON.stringify({ error: 'A valid http(s) url is required' }), { status: 400 });
+    return jsonResponse({ error: 'A valid http(s) url is required' }, 400);
   }
 
   const { data: membership } = await supabase
@@ -77,7 +82,7 @@ Deno.serve(async (req: Request) => {
     .limit(1)
     .maybeSingle();
   if (!membership) {
-    return new Response(JSON.stringify({ error: 'No organization found for this user' }), { status: 400 });
+    return jsonResponse({ error: 'No organization found for this user' }, 400);
   }
   const orgId = membership.org_id;
 
@@ -88,10 +93,7 @@ Deno.serve(async (req: Request) => {
     .eq('org_id', orgId)
     .gte('created_at', since);
   if ((todayCount ?? 0) >= DAILY_ANALYSIS_LIMIT) {
-    return new Response(
-      JSON.stringify({ error: `Daily analysis limit reached (${DAILY_ANALYSIS_LIMIT} per day)` }),
-      { status: 429 }
-    );
+    return jsonResponse({ error: `Daily analysis limit reached (${DAILY_ANALYSIS_LIMIT} per day)` }, 429);
   }
 
   const { data: analysis, error: insertError } = await supabase
@@ -100,9 +102,7 @@ Deno.serve(async (req: Request) => {
     .select('*')
     .single();
   if (insertError || !analysis) {
-    return new Response(JSON.stringify({ error: insertError?.message ?? 'Failed to create analysis' }), {
-      status: 500,
-    });
+    return jsonResponse({ error: insertError?.message ?? 'Failed to create analysis' }, 500);
   }
 
   const fail = async (message: string) => {
@@ -111,7 +111,7 @@ Deno.serve(async (req: Request) => {
       .update({ status: 'failed', error_message: message.slice(0, 1000), completed_at: new Date().toISOString() })
       .eq('id', analysis.id);
     await captureException(SENTRY_DSN, `ai-analyze: ${message}`, { analysisId: analysis.id, url });
-    return new Response(JSON.stringify({ ok: false, error: message, analysis_id: analysis.id }), { status: 200 });
+    return jsonResponse({ ok: false, error: message, analysis_id: analysis.id }, 200);
   };
 
   let html: string;
@@ -242,5 +242,5 @@ Deno.serve(async (req: Request) => {
 
   if (updateError) return await fail(`Failed to save analysis: ${updateError.message}`);
 
-  return new Response(JSON.stringify({ ok: true, analysis: updated }), { status: 200 });
+  return jsonResponse({ ok: true, analysis: updated }, 200);
 });

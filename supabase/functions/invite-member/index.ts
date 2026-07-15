@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { captureException } from '../_shared/sentry.ts';
+import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -9,13 +10,17 @@ const SENTRY_DSN = Deno.env.get('SENTRY_DSN');
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return jsonResponse({ error: 'Method not allowed' }, 405);
   }
 
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'Missing Authorization header' }), { status: 401 });
+    return jsonResponse({ error: 'Missing Authorization header' }, 401);
   }
 
   const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -26,24 +31,24 @@ Deno.serve(async (req: Request) => {
     data: { user },
   } = await callerClient.auth.getUser();
   if (!user) {
-    return new Response(JSON.stringify({ error: 'Invalid session' }), { status: 401 });
+    return jsonResponse({ error: 'Invalid session' }, 401);
   }
 
   let body: any;
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 });
+    return jsonResponse({ error: 'Invalid JSON' }, 400);
   }
 
   const email: string | undefined = typeof body.email === 'string' ? body.email.trim().toLowerCase() : undefined;
   const role: string | undefined = body.role;
 
   if (!email || !EMAIL_RE.test(email)) {
-    return new Response(JSON.stringify({ error: 'A valid email is required' }), { status: 400 });
+    return jsonResponse({ error: 'A valid email is required' }, 400);
   }
   if (role !== 'admin' && role !== 'member') {
-    return new Response(JSON.stringify({ error: 'Role must be admin or member' }), { status: 400 });
+    return jsonResponse({ error: 'Role must be admin or member' }, 400);
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -56,7 +61,7 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
 
   if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
-    return new Response(JSON.stringify({ error: 'Only owners and admins can invite teammates' }), { status: 403 });
+    return jsonResponse({ error: 'Only owners and admins can invite teammates' }, 403);
   }
   const orgId = membership.org_id;
 
@@ -71,9 +76,7 @@ Deno.serve(async (req: Request) => {
       .eq('user_id', existingProfile.id)
       .maybeSingle();
     if (existingMembership) {
-      return new Response(JSON.stringify({ error: 'This person is already a member of your organization' }), {
-        status: 409,
-      });
+      return jsonResponse({ error: 'This person is already a member of your organization' }, 409);
     }
   }
 
@@ -82,13 +85,9 @@ Deno.serve(async (req: Request) => {
     .insert({ org_id: orgId, email, role, invited_by: user.id });
   if (inviteRowError) {
     if (inviteRowError.code === '23505') {
-      return new Response(JSON.stringify({ error: 'This email already has a pending invitation' }), {
-        status: 409,
-      });
+      return jsonResponse({ error: 'This email already has a pending invitation' }, 409);
     }
-    return new Response(JSON.stringify({ error: `Failed to create invitation: ${inviteRowError.message}` }), {
-      status: 500,
-    });
+    return jsonResponse({ error: `Failed to create invitation: ${inviteRowError.message}` }, 500);
   }
 
   // Logged before sending: inviteUserByEmail creates the auth user (and fires the
@@ -115,8 +114,8 @@ Deno.serve(async (req: Request) => {
         ? 'This email already has an account. They cannot currently be added to a second organization.'
         : `Failed to send invitation email: ${authInviteError.message}`;
     await captureException(SENTRY_DSN, `invite-member: ${authInviteError.message}`, { orgId, email });
-    return new Response(JSON.stringify({ error: message }), { status: 400 });
+    return jsonResponse({ error: message }, 400);
   }
 
-  return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  return jsonResponse({ ok: true }, 200);
 });
