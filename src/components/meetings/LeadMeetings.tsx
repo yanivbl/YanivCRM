@@ -9,9 +9,10 @@ import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { MeetingStatusBadge } from './MeetingStatusBadge';
 import { MeetingForm } from './MeetingForm';
 import type { Meeting, MeetingFormValues } from '../../types/meeting';
+import type { Lead } from '../../types/lead';
 
-export function LeadMeetings({ leadId }: { leadId: string }) {
-  const { meetings, loading, createMeeting, updateMeeting, deleteMeeting } = useMeetings(leadId);
+export function LeadMeetings({ lead }: { lead: Lead }) {
+  const { meetings, loading, createMeeting, updateMeeting, deleteMeeting } = useMeetings(lead.id, lead.org_id);
   const [showCreate, setShowCreate] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
   const [deletingMeeting, setDeletingMeeting] = useState<Meeting | null>(null);

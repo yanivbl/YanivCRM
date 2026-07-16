@@ -78,7 +78,7 @@ export function LeadDetailPage() {
           <LeadDetailCard lead={lead} />
           <LeadWebsiteAnalysis leadId={lead.id} defaultUrl={lead.website_url} />
           <LeadTasks lead={lead} />
-          <LeadMeetings leadId={lead.id} />
+          <LeadMeetings lead={lead} />
         </div>
         <div className="flex flex-col gap-4">
           <LeadNotes leadId={lead.id} />
