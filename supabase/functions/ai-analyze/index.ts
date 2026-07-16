@@ -135,20 +135,25 @@ Deno.serve(async (req: Request) => {
 
   // Claude sometimes collapses a single-point list field into a plain string
   // instead of a one-element array, and on unusual (non-prose, repetitive)
-  // page content occasionally emits pseudo-XML <item> tags inside that string
-  // instead of separate array elements — both observed empirically against
-  // real sites. Normalize rather than reject, since the content is still valid.
+  // page content occasionally emits pseudo-XML inside that string instead of
+  // separate array elements — observed both <item> and <array><li>...</li></array>
+  // wrapping, empirically, against real sites, and there's no guarantee it won't
+  // invent a third variant. Normalize rather than reject: try known list-item
+  // tags first, and as a last resort strip any stray markup rather than ever
+  // showing raw tags to the user.
   function toStringArray(value: unknown): string[] | null {
     if (Array.isArray(value)) {
       const strings = value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
       return strings.length > 0 ? strings : null;
     }
     if (typeof value === 'string' && value.trim().length > 0) {
-      const itemMatches = [...value.matchAll(/<item>([\s\S]*?)<\/item>/gi)]
-        .map((m) => m[1].trim())
+      const itemMatches = [...value.matchAll(/<(?:item|li)>([\s\S]*?)<\/(?:item|li)>/gi)]
+        .map((m) => m[1].replace(/<\/?[a-z]+>/gi, '').trim())
         .filter(Boolean);
       if (itemMatches.length > 0) return itemMatches;
-      return [value.trim()];
+
+      const stripped = value.replace(/<\/?[a-z]+>/gi, '').trim();
+      return stripped ? [stripped] : null;
     }
     return null;
   }
