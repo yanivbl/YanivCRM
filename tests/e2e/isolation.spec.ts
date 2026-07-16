@@ -24,15 +24,14 @@ test('users in different organizations cannot see each other\'s leads', async ({
   await pageB.click('button:has-text("יצירה")');
   await pageB.waitForURL('**/leads');
 
-  await pageB.waitForTimeout(500);
   // The desktop table and mobile card both render in the DOM at once (CSS
   // hides whichever doesn't match the viewport) — .first() picks either
   // consistently rather than hitting a strict-mode multi-match error.
+  // No fixed wait needed: toBeVisible() already polls until the list loads.
   await expect(pageB.getByText(leadBName).first()).toBeVisible();
   await expect(pageB.getByText(leadAName)).not.toBeVisible();
 
   await pageA.goto('/leads');
-  await pageA.waitForTimeout(500);
   await expect(pageA.getByText(leadAName).first()).toBeVisible();
   await expect(pageA.getByText(leadBName)).not.toBeVisible();
 

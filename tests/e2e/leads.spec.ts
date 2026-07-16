@@ -53,13 +53,13 @@ test.describe.serial('lead CRUD', () => {
   test('edits the lead and reflects the change on the detail page', async ({ page }) => {
     await page.goto('/leads');
     await page.getByText(leadName).first().click();
-    await page.waitForTimeout(500);
+    await page.waitForURL('**/leads/*');
 
     await page.getByRole('link', { name: 'עריכה' }).click();
     await page.waitForSelector('input[name="price"]');
     await page.fill('input[name="price"]', '2500');
     await page.click('button:has-text("שמירה")');
-    await page.waitForTimeout(500);
+    await page.waitForURL((url) => !url.pathname.endsWith('/edit'));
 
     await expect(page.getByText('₪2,500.00').or(page.getByText('2,500'))).toBeVisible();
   });

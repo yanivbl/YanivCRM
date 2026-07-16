@@ -14,8 +14,14 @@ test('the org-wide activity page shows lead creation and status changes', async 
   await page.click('button:has-text("יצירה")');
   await page.waitForURL('**/leads');
 
+  // handleStatusChange fires the update without the test awaiting it directly
+  // — navigating away before it reaches the server would abort the request,
+  // so wait for the real PATCH response instead of guessing at a fixed delay.
+  const statusUpdateResponse = page.waitForResponse(
+    (res) => res.url().includes('/rest/v1/leads') && res.request().method() === 'PATCH'
+  );
   await page.selectOption('select[aria-label="שינוי סטטוס"]', 'contact_scheduled');
-  await page.waitForTimeout(500);
+  await statusUpdateResponse;
 
   await page.locator('text=פעילות').first().click();
   await page.waitForURL('**/activity');

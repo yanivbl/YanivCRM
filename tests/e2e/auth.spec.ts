@@ -29,7 +29,6 @@ test.describe('authentication', () => {
     await expect(page).toHaveURL(/\/$/);
 
     await page.reload();
-    await page.waitForTimeout(1000);
     await expect(page).toHaveURL(/\/$/);
 
     await page.getByRole('button', { name: 'התנתקות' }).click();
