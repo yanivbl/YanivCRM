@@ -19,7 +19,7 @@ export function useLeadTasks(leadId: string) {
       .select('*')
       .eq('lead_id', leadId)
       .order('status', { ascending: true })
-      .order('due_date', { ascending: true, nullsFirst: false })
+      .order('due_at', { ascending: true, nullsFirst: false })
       .then(({ data }) => {
         if (cancelled) return;
         setTasks(data ?? []);

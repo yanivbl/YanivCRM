@@ -6,7 +6,7 @@ import { useTaskStats } from '../hooks/useTaskStats';
 import { StatCard } from '../components/dashboard/StatCard';
 import { StatusBadge } from '../components/leads/StatusBadge';
 import { PriorityBadge } from '../components/tasks/PriorityBadge';
-import { formatDateOnly } from '../utils/formatters';
+import { formatDate } from '../utils/formatters';
 import { Button } from '../components/ui/Button';
 import { Spinner } from '../components/ui/Spinner';
 
@@ -94,7 +94,7 @@ export function DashboardPage() {
                         <div className="min-w-0">
                           <p className="truncate font-medium text-gray-900">{task.title}</p>
                           <p className="truncate text-xs text-gray-400">
-                            {task.lead_name} · באיחור מ־{task.due_date && formatDateOnly(task.due_date)}
+                            {task.lead_name} · באיחור מ־{task.due_at && formatDate(task.due_at)}
                           </p>
                         </div>
                         <PriorityBadge priority={task.priority} />

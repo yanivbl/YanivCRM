@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLeadTasks } from '../../hooks/useLeadTasks';
-import { formatDateOnly, isPastDateOnly } from '../../utils/formatters';
+import { formatDate, isPast } from '../../utils/formatters';
 import { PriorityBadge } from './PriorityBadge';
 import { AddTaskModal } from './AddTaskModal';
 import { Button } from '../ui/Button';
@@ -38,7 +38,7 @@ export function LeadTasks({ lead }: { lead: Lead }) {
       ) : (
         <ul className="flex flex-col gap-2">
           {tasks.map((task) => {
-            const overdue = task.status === 'open' && task.due_date && isPastDateOnly(task.due_date);
+            const overdue = task.status === 'open' && task.due_at && isPast(task.due_at);
             return (
               <li
                 key={task.id}
@@ -59,10 +59,13 @@ export function LeadTasks({ lead }: { lead: Lead }) {
                   >
                     {task.title}
                   </p>
-                  {task.due_date && (
+                  {task.description && (
+                    <p className="truncate text-xs text-gray-500">{task.description}</p>
+                  )}
+                  {task.due_at && (
                     <p className={`text-xs ${overdue ? 'font-medium text-red-600' : 'text-gray-400'}`}>
                       {overdue ? 'באיחור — ' : 'עד '}
-                      {formatDateOnly(task.due_date)}
+                      {formatDate(task.due_at)}
                     </p>
                   )}
                 </div>

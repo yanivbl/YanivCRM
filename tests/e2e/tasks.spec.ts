@@ -52,11 +52,11 @@ test('add a task on a lead, mark it done, and see it on the org-wide tasks page'
   await expect(page.locator('tr', { hasText: taskTitle })).toBeVisible();
 });
 
-test('add a task with a due date and see it reflected on the lead', async ({ page }) => {
+test('add a task with a due date, time, and description', async ({ page }) => {
   const email = uniqueEmail('e2e-tasks-duedate');
   const leadName = 'ליד לבדיקת תאריך יעד';
   const taskTitle = 'שיחת מעקב';
-  const dueDate = '2026-08-01';
+  const taskDescription = 'לבדוק אם דוד קיבל את ההצעה';
 
   await register(page, email, 'משתמש בדיקת תאריך');
   await expect(page).toHaveURL(/\/$/);
@@ -73,11 +73,39 @@ test('add a task with a due date and see it reflected on the lead', async ({ pag
   await page.click('button:has-text("+ משימה חדשה")');
   await expect(page.getByRole('heading', { name: `משימה חדשה עבור ${leadName}` })).toBeVisible();
   await page.fill('input[name="title"]', taskTitle);
-  await page.fill('input[name="dueDate"]', dueDate);
+  await page.fill('#task-description', taskDescription);
+  await page.fill('input[name="dueDate"]', '2026-08-01');
+  await page.fill('input[name="dueTime"]', '14:30');
   await page.click('button:has-text("הוספת משימה")');
   await expect(page.getByRole('heading', { name: `משימה חדשה עבור ${leadName}` })).not.toBeVisible();
 
   const taskRow = page.locator('li', { hasText: taskTitle });
   await expect(taskRow).toBeVisible({ timeout: 10000 });
-  await expect(taskRow).toContainText('1.8.2026');
+  await expect(taskRow).toContainText(taskDescription);
+  await expect(taskRow).toContainText('1.8.2026, 14:30');
+});
+
+test('leaving only one of due date/time filled shows a validation error', async ({ page }) => {
+  const email = uniqueEmail('e2e-tasks-partial-due');
+  const leadName = 'ליד לבדיקת תאריך חלקי';
+  const taskTitle = 'משימה עם תאריך חלקי';
+
+  await register(page, email, 'משתמש בדיקת תאריך חלקי');
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto('/leads/new');
+  await page.waitForSelector('input[name="name"]');
+  await page.fill('input[name="name"]', leadName);
+  await page.click('button:has-text("יצירה")');
+  await page.waitForURL('**/leads');
+
+  await page.getByRole('link', { name: leadName }).click();
+  await page.waitForURL('**/leads/*');
+  await page.waitForSelector('text=משימות');
+  await page.click('button:has-text("+ משימה חדשה")');
+  await page.fill('input[name="title"]', taskTitle);
+  await page.fill('input[name="dueDate"]', '2026-08-01');
+  await page.click('button:has-text("הוספת משימה")');
+
+  await expect(page.getByText('יש לבחור גם תאריך וגם שעה')).toBeVisible();
 });

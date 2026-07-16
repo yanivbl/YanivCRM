@@ -7,11 +7,11 @@ interface TaskStats {
   dueTodayCount: number;
 }
 
-function todayRange() {
+function todayBounds() {
   const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startIso = startOfDay.toISOString().slice(0, 10);
-  return startIso;
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTomorrow = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+  return { startOfToday: startOfToday.toISOString(), startOfTomorrow: startOfTomorrow.toISOString() };
 }
 
 export function useTaskStats() {
@@ -24,21 +24,22 @@ export function useTaskStats() {
 
     async function load() {
       setLoading(true);
-      const today = todayRange();
+      const { startOfToday, startOfTomorrow } = todayBounds();
 
       const [overdueRes, dueTodayRes] = await Promise.all([
         supabase
           .from('tasks')
           .select('*, leads(name)', { count: 'exact' })
           .eq('status', 'open')
-          .lt('due_date', today)
-          .order('due_date', { ascending: true })
+          .lt('due_at', startOfToday)
+          .order('due_at', { ascending: true })
           .limit(5),
         supabase
           .from('tasks')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'open')
-          .eq('due_date', today),
+          .gte('due_at', startOfToday)
+          .lt('due_at', startOfTomorrow),
       ]);
 
       if (cancelled) return;

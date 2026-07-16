@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { TaskWithLead } from '../../types/task';
-import { formatDateOnly, isPastDateOnly } from '../../utils/formatters';
+import { formatDate, isPast } from '../../utils/formatters';
 import { PriorityBadge } from './PriorityBadge';
 import { STATUS_LABELS } from '../../types/task';
 
@@ -24,7 +24,7 @@ export function TaskTable({ tasks, onToggleDone }: TaskTableProps) {
       </thead>
       <tbody className="divide-y divide-gray-100">
         {tasks.map((task) => {
-          const overdue = task.status === 'open' && task.due_date && isPastDateOnly(task.due_date);
+          const overdue = task.status === 'open' && task.due_at && isPast(task.due_at);
           return (
             <tr key={task.id} className="hover:bg-gray-50">
               <td className="px-4 py-3">
@@ -52,7 +52,7 @@ export function TaskTable({ tasks, onToggleDone }: TaskTableProps) {
                 <PriorityBadge priority={task.priority} />
               </td>
               <td className={`px-4 py-3 ${overdue ? 'font-medium text-red-600' : 'text-gray-600'}`}>
-                {task.due_date ? formatDateOnly(task.due_date) : '—'}
+                {task.due_at ? formatDate(task.due_at) : '—'}
               </td>
               <td className="px-4 py-3 text-gray-600">{STATUS_LABELS[task.status]}</td>
             </tr>

@@ -21,7 +21,7 @@ export function useOrgTasks(status: TaskStatus | '', priority: TaskPriority | ''
       .from('tasks')
       .select('*, leads(name)')
       .order('status', { ascending: true })
-      .order('due_date', { ascending: true, nullsFirst: false });
+      .order('due_at', { ascending: true, nullsFirst: false });
 
     if (status) query = query.eq('status', status);
     if (priority) query = query.eq('priority', priority);

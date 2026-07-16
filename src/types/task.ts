@@ -10,7 +10,7 @@ export interface Task {
   description: string | null;
   status: TaskStatus;
   priority: TaskPriority;
-  due_date: string | null;
+  due_at: string | null;
   assignee_id: string | null;
   created_by: string | null;
   completed_at: string | null;
