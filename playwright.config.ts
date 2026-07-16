@@ -8,7 +8,7 @@ export default defineConfig({
   // operations and causes hangs/timeouts unrelated to the app itself.
   workers: 1,
   retries: 0,
-  reporter: 'list',
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'retain-on-failure',
