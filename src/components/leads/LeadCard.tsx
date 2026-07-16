@@ -6,10 +6,9 @@ import { StatusBadge } from './StatusBadge';
 interface LeadCardProps {
   lead: Lead;
   onDeleteRequest: (lead: Lead) => void;
-  onAddTaskRequest: (lead: Lead) => void;
 }
 
-export function LeadCard({ lead, onDeleteRequest, onAddTaskRequest }: LeadCardProps) {
+export function LeadCard({ lead, onDeleteRequest }: LeadCardProps) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:hidden">
       <div className="flex items-start justify-between gap-2">
@@ -32,9 +31,6 @@ export function LeadCard({ lead, onDeleteRequest, onAddTaskRequest }: LeadCardPr
         <Link to={`/leads/${lead.id}/edit`} className="text-gray-600 hover:underline">
           עריכה
         </Link>
-        <button type="button" onClick={() => onAddTaskRequest(lead)} className="text-gray-600 hover:underline">
-          + משימה
-        </button>
         <button
           type="button"
           onClick={() => onDeleteRequest(lead)}

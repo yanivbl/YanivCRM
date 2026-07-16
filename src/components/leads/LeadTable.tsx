@@ -8,10 +8,9 @@ interface LeadTableProps {
   leads: Lead[];
   onStatusChange: (id: string, status: LeadStatus) => void;
   onDeleteRequest: (lead: Lead) => void;
-  onAddTaskRequest: (lead: Lead) => void;
 }
 
-export function LeadTable({ leads, onStatusChange, onDeleteRequest, onAddTaskRequest }: LeadTableProps) {
+export function LeadTable({ leads, onStatusChange, onDeleteRequest }: LeadTableProps) {
   return (
     <table className="hidden w-full text-start text-sm md:table">
       <thead>
@@ -68,13 +67,6 @@ export function LeadTable({ leads, onStatusChange, onDeleteRequest, onAddTaskReq
                 <Link to={`/leads/${lead.id}/edit`} className="text-gray-600 hover:underline">
                   עריכה
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => onAddTaskRequest(lead)}
-                  className="text-gray-600 hover:underline"
-                >
-                  + משימה
-                </button>
                 <button
                   type="button"
                   onClick={() => onDeleteRequest(lead)}
