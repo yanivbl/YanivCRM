@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { TextField } from '../ui/TextField';
 import { Select } from '../ui/Select';
 import { Button } from '../ui/Button';
-import { MEETING_STATUS_LABELS, MEETING_STATUS_OPTIONS, type MeetingFormValues } from '../../types/meeting';
+import { MEETING_STATUS_LABELS, MEETING_STATUS_OPTIONS, type MeetingFormValues, type MeetingStatus } from '../../types/meeting';
 
 interface MeetingFormProps {
   initialValues?: MeetingFormValues;
@@ -11,41 +11,32 @@ interface MeetingFormProps {
   onCancel: () => void;
 }
 
-const EMPTY_VALUES: MeetingFormValues = {
-  starts_at: '',
-  status: 'scheduled',
-  notes: '',
-};
-
 export function MeetingForm({ initialValues, submitLabel, onSubmit, onCancel }: MeetingFormProps) {
-  const [values, setValues] = useState<MeetingFormValues>(initialValues ?? EMPTY_VALUES);
+  const [initialDate = '', initialTime = ''] = initialValues?.starts_at ? initialValues.starts_at.split('T') : [];
+  // Date and time are independent state, not derived by splitting a combined
+  // string each render — deriving them meant each field's onChange had to
+  // read the OTHER field's value out of that render's closure to recombine
+  // them, which goes stale if React hasn't re-rendered between the two
+  // fields being filled (a real, CI-only failure: a fast local run never hit
+  // it, but a busier/slower runner did, silently dropping one part and
+  // failing this form's own "both required" check).
+  const [date, setDate] = useState(initialDate);
+  const [time, setTime] = useState(initialTime);
+  const [status, setStatus] = useState<MeetingStatus>(initialValues?.status ?? 'scheduled');
+  const [notes, setNotes] = useState(initialValues?.notes ?? '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const setField = <K extends keyof MeetingFormValues>(field: K, value: MeetingFormValues[K]) => {
-    setValues((v) => ({ ...v, [field]: value }));
-  };
-
-  // A native <input type="datetime-local"> only fires onChange once BOTH the
-  // date and the time are set — its picker has no explicit "confirm" step, so
-  // picking just a date (without also scrolling to a time) silently does
-  // nothing, which reads as "there's no way to confirm". Two plain date/time
-  // inputs each commit on their own and are far less ambiguous.
-  const [datePart, timePart] = values.starts_at ? values.starts_at.split('T') : ['', ''];
-
-  const setDatePart = (date: string) => setField('starts_at', date ? `${date}T${timePart || '09:00'}` : '');
-  const setTimePart = (time: string) => setField('starts_at', datePart ? `${datePart}T${time}` : '');
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!values.starts_at || !datePart || !timePart) {
+    if (!date || !time) {
       setError('יש לבחור תאריך ושעה');
       return;
     }
     setError(null);
     setSubmitting(true);
     try {
-      await onSubmit(values);
+      await onSubmit({ starts_at: `${date}T${time}`, status, notes });
     } finally {
       setSubmitting(false);
     }
@@ -60,8 +51,8 @@ export function MeetingForm({ initialValues, submitLabel, onSubmit, onCancel }: 
             name="starts_at_date"
             type="date"
             dir="ltr"
-            value={datePart}
-            onChange={(e) => setDatePart(e.target.value)}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
             error={error ?? undefined}
           />
         </div>
@@ -71,16 +62,16 @@ export function MeetingForm({ initialValues, submitLabel, onSubmit, onCancel }: 
             name="starts_at_time"
             type="time"
             dir="ltr"
-            value={timePart}
-            onChange={(e) => setTimePart(e.target.value)}
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
           />
         </div>
       </div>
       <Select
         label="סטטוס פגישה"
         name="status"
-        value={values.status}
-        onChange={(e) => setField('status', e.target.value as MeetingFormValues['status'])}
+        value={status}
+        onChange={(e) => setStatus(e.target.value as MeetingStatus)}
       >
         {MEETING_STATUS_OPTIONS.map((s) => (
           <option key={s} value={s}>
@@ -96,8 +87,8 @@ export function MeetingForm({ initialValues, submitLabel, onSubmit, onCancel }: 
           id="meeting-notes"
           rows={3}
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          value={values.notes}
-          onChange={(e) => setField('notes', e.target.value)}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
         />
       </div>
 
