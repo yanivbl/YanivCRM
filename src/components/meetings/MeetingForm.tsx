@@ -26,9 +26,19 @@ export function MeetingForm({ initialValues, submitLabel, onSubmit, onCancel }: 
     setValues((v) => ({ ...v, [field]: value }));
   };
 
+  // A native <input type="datetime-local"> only fires onChange once BOTH the
+  // date and the time are set — its picker has no explicit "confirm" step, so
+  // picking just a date (without also scrolling to a time) silently does
+  // nothing, which reads as "there's no way to confirm". Two plain date/time
+  // inputs each commit on their own and are far less ambiguous.
+  const [datePart, timePart] = values.starts_at ? values.starts_at.split('T') : ['', ''];
+
+  const setDatePart = (date: string) => setField('starts_at', date ? `${date}T${timePart || '09:00'}` : '');
+  const setTimePart = (time: string) => setField('starts_at', datePart ? `${datePart}T${time}` : '');
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!values.starts_at) {
+    if (!values.starts_at || !datePart || !timePart) {
       setError('יש לבחור תאריך ושעה');
       return;
     }
@@ -43,15 +53,29 @@ export function MeetingForm({ initialValues, submitLabel, onSubmit, onCancel }: 
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-      <TextField
-        label="תאריך ושעה"
-        name="starts_at"
-        type="datetime-local"
-        dir="ltr"
-        value={values.starts_at}
-        onChange={(e) => setField('starts_at', e.target.value)}
-        error={error ?? undefined}
-      />
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <TextField
+            label="תאריך"
+            name="starts_at_date"
+            type="date"
+            dir="ltr"
+            value={datePart}
+            onChange={(e) => setDatePart(e.target.value)}
+            error={error ?? undefined}
+          />
+        </div>
+        <div className="w-32">
+          <TextField
+            label="שעה"
+            name="starts_at_time"
+            type="time"
+            dir="ltr"
+            value={timePart}
+            onChange={(e) => setTimePart(e.target.value)}
+          />
+        </div>
+      </div>
       <Select
         label="סטטוס פגישה"
         name="status"

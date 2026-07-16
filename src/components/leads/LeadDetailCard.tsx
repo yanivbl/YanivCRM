@@ -1,7 +1,6 @@
 import type { Lead } from '../../types/lead';
 import { SOURCE_LABELS } from '../../types/lead';
 import { formatDate, formatPrice } from '../../utils/formatters';
-import { StatusBadge } from './StatusBadge';
 
 export function LeadDetailCard({ lead }: { lead: Lead }) {
   const rows: [string, string][] = [
@@ -17,10 +16,7 @@ export function LeadDetailCard({ lead }: { lead: Lead }) {
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">{lead.name}</h2>
-        <StatusBadge status={lead.status} />
-      </div>
+      <h3 className="mb-4 text-lg font-semibold text-gray-900">פרטי הליד</h3>
       <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {rows.map(([label, val]) => (
           <div key={label}>
