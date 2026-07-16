@@ -1,15 +1,19 @@
 import { Link } from 'react-router-dom';
-import { CheckCircle2, CalendarClock, Sparkles, Briefcase, Inbox } from 'lucide-react';
+import { CheckCircle2, CalendarClock, Sparkles, Briefcase, Inbox, AlertTriangle, ListTodo } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useLeadStats } from '../hooks/useLeadStats';
+import { useTaskStats } from '../hooks/useTaskStats';
 import { StatCard } from '../components/dashboard/StatCard';
 import { StatusBadge } from '../components/leads/StatusBadge';
+import { PriorityBadge } from '../components/tasks/PriorityBadge';
+import { formatDateOnly } from '../utils/formatters';
 import { Button } from '../components/ui/Button';
 import { Spinner } from '../components/ui/Spinner';
 
 export function DashboardPage() {
   const { user } = useAuth();
   const { stats, recentLeads, loading } = useLeadStats();
+  const { stats: taskStats, overdueTasks, loading: taskStatsLoading } = useTaskStats();
   const fullName = (user?.user_metadata?.full_name as string | undefined)?.trim() || user?.email || '';
 
   return (
@@ -62,6 +66,46 @@ export function DashboardPage() {
             </ul>
           )}
         </div>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold text-gray-900">משימות</h2>
+
+        {taskStatsLoading || !taskStats ? (
+          <div className="flex justify-center py-8">
+            <Spinner />
+          </div>
+        ) : (
+          <>
+            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <StatCard label="משימות באיחור" value={taskStats.overdueCount} icon={AlertTriangle} tint="amber" />
+              <StatCard label="משימות שאמורות היום" value={taskStats.dueTodayCount} icon={ListTodo} tint="blue" />
+            </div>
+
+            {overdueTasks.length > 0 && (
+              <div className="rounded-xl border border-gray-200 bg-white">
+                <ul className="divide-y divide-gray-100">
+                  {overdueTasks.map((task) => (
+                    <li key={task.id}>
+                      <Link
+                        to={`/leads/${task.lead_id}`}
+                        className="flex items-center justify-between gap-3 px-5 py-3 text-sm hover:bg-gray-50"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-gray-900">{task.title}</p>
+                          <p className="truncate text-xs text-gray-400">
+                            {task.lead_name} · באיחור מ־{task.due_date && formatDateOnly(task.due_date)}
+                          </p>
+                        </div>
+                        <PriorityBadge priority={task.priority} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

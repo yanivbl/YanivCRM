@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabaseClient';
 import { useLead } from '../hooks/useLead';
 import { LeadDetailCard } from '../components/leads/LeadDetailCard';
+import { LeadTasks } from '../components/tasks/LeadTasks';
 import { LeadNotes } from '../components/leads/LeadNotes';
 import { LeadMeetings } from '../components/meetings/LeadMeetings';
 import { LeadWebsiteAnalysis } from '../components/analysis/LeadWebsiteAnalysis';
@@ -60,6 +61,7 @@ export function LeadDetailPage() {
       </div>
 
       <LeadWebsiteAnalysis leadId={lead.id} defaultUrl={lead.website_url} />
+      <LeadTasks leadId={lead.id} orgId={lead.org_id} />
       <LeadMeetings leadId={lead.id} />
       <LeadNotes leadId={lead.id} />
       <LeadActivityLog leadId={lead.id} />

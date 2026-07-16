@@ -1,0 +1,48 @@
+import { test, expect } from '@playwright/test';
+import { register, uniqueEmail } from './helpers';
+
+test('add a task on a lead, mark it done, and see it on the org-wide tasks page', async ({ page }) => {
+  const email = uniqueEmail('e2e-tasks');
+  const leadName = 'ליד לבדיקת משימות';
+  const taskTitle = 'לחזור עם הצעת מחיר';
+
+  await register(page, email, 'משתמש בדיקת משימות');
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto('/leads/new');
+  await page.waitForSelector('input[name="name"]');
+  await page.fill('input[name="name"]', leadName);
+  await page.click('button:has-text("יצירה")');
+  await page.waitForURL('**/leads');
+
+  await page.getByRole('link', { name: leadName }).click();
+  await page.waitForURL('**/leads/*');
+
+  await page.waitForSelector('text=משימות');
+  await page.fill('input[name="title"]', taskTitle);
+  await page.selectOption('select[name="priority"]', 'high');
+  await page.click('button:has-text("הוספה")');
+
+  const taskRow = page.locator('li', { hasText: taskTitle });
+  await expect(taskRow).toBeVisible({ timeout: 10000 });
+  await expect(taskRow.locator('text=גבוהה')).toBeVisible();
+
+  await taskRow.locator('input[type="checkbox"]').check();
+  await expect(taskRow.locator('p', { hasText: taskTitle })).toHaveClass(/line-through/);
+  // The checkbox update is optimistic (UI reflects it immediately) while the
+  // actual write is still in flight — navigating away too fast aborts that
+  // in-flight request. Give it a beat to actually reach the server first.
+  await page.waitForTimeout(500);
+
+  await page.goto('/tasks');
+  await expect(page.locator('h1')).toHaveText('משימות');
+  const tasksTableRow = page.locator('tr', { hasText: taskTitle });
+  await expect(tasksTableRow).toBeVisible();
+  await expect(tasksTableRow.getByRole('link', { name: leadName })).toBeVisible();
+
+  await page.selectOption('select[aria-label="סינון לפי סטטוס"]', 'open');
+  await expect(page.locator('tr', { hasText: taskTitle })).toHaveCount(0);
+
+  await page.selectOption('select[aria-label="סינון לפי סטטוס"]', 'done');
+  await expect(page.locator('tr', { hasText: taskTitle })).toBeVisible();
+});

@@ -12,6 +12,7 @@ import { LeadsListPage } from './pages/LeadsListPage';
 import { LeadNewPage } from './pages/LeadNewPage';
 import { LeadEditPage } from './pages/LeadEditPage';
 import { LeadDetailPage } from './pages/LeadDetailPage';
+import { TasksPage } from './pages/TasksPage';
 import { TeamPage } from './pages/TeamPage';
 import { ActivityLogPage } from './pages/ActivityLogPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -34,6 +35,7 @@ function App() {
               <Route path="/leads/new" element={<LeadNewPage />} />
               <Route path="/leads/:id" element={<LeadDetailPage />} />
               <Route path="/leads/:id/edit" element={<LeadEditPage />} />
+              <Route path="/tasks" element={<TasksPage />} />
               <Route path="/team" element={<TeamPage />} />
               <Route path="/activity" element={<ActivityLogPage />} />
               <Route path="/settings" element={<SettingsPage />} />
