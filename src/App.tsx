@@ -2,12 +2,12 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './routes/ProtectedRoute';
+import { RootRoute } from './routes/RootRoute';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { DashboardLayout } from './pages/DashboardLayout';
-import { DashboardPage } from './pages/DashboardPage';
 import { LeadsListPage } from './pages/LeadsListPage';
 import { LeadNewPage } from './pages/LeadNewPage';
 import { LeadEditPage } from './pages/LeadEditPage';
@@ -27,9 +27,9 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/" element={<RootRoute />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/" element={<DashboardPage />} />
               <Route path="/leads" element={<LeadsListPage />} />
               <Route path="/leads/new" element={<LeadNewPage />} />
               <Route path="/leads/:id" element={<LeadDetailPage />} />

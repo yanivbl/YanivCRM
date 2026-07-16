@@ -2,8 +2,14 @@ import { test, expect } from '@playwright/test';
 import { register, login, uniqueEmail, TEST_PASSWORD } from './helpers';
 
 test.describe('authentication', () => {
-  test('redirects an unauthenticated visitor to /login', async ({ page }) => {
+  test('shows the public landing page at / when signed out, and redirects protected routes to /login', async ({
+    page,
+  }) => {
     await page.goto('/');
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole('link', { name: 'התחילו בחינם' })).toBeVisible();
+
+    await page.goto('/leads');
     await page.waitForURL('**/login');
     await expect(page).toHaveURL(/\/login$/);
   });

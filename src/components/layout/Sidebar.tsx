@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, UserPlus, Activity, Settings, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
+import { Logo } from '../branding/Logo';
 
 const NAV_ITEMS = [
   { to: '/', label: 'לוח בקרה', icon: LayoutDashboard, end: true },
@@ -30,11 +31,8 @@ export function Sidebar() {
 
   return (
     <aside className="hidden h-screen w-64 shrink-0 flex-col border-e border-gray-200 bg-white md:flex">
-      <div className="flex items-center gap-2 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-sm font-bold text-white">
-          L
-        </div>
-        <span className="text-base font-semibold text-gray-900">LeadBase AI</span>
+      <div className="flex items-center px-5 py-5">
+        <Logo withWordmark />
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
