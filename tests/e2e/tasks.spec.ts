@@ -28,12 +28,16 @@ test('add a task on a lead, mark it done, and see it on the org-wide tasks page'
   await expect(taskRow).toBeVisible({ timeout: 10000 });
   await expect(taskRow.locator('text=גבוהה')).toBeVisible();
 
-  await taskRow.locator('input[type="checkbox"]').check();
-  await expect(taskRow.locator('p', { hasText: taskTitle })).toHaveClass(/line-through/);
   // The checkbox update is optimistic (UI reflects it immediately) while the
   // actual write is still in flight — navigating away too fast aborts that
-  // in-flight request. Give it a beat to actually reach the server first.
-  await page.waitForTimeout(500);
+  // in-flight request. Wait for the real PATCH response instead of a fixed
+  // delay, which would need re-tuning for whatever machine runs this test.
+  const updateResponse = page.waitForResponse(
+    (res) => res.url().includes('/rest/v1/tasks') && res.request().method() === 'PATCH'
+  );
+  await taskRow.locator('input[type="checkbox"]').check();
+  await expect(taskRow.locator('p', { hasText: taskTitle })).toHaveClass(/line-through/);
+  await updateResponse;
 
   await page.goto('/tasks');
   await expect(page.locator('h1')).toHaveText('משימות');
