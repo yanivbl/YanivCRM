@@ -3,6 +3,9 @@ import { register, uniqueEmail } from './helpers';
 
 test('settings page: update profile name and Cal.com organizer email', async ({ page }) => {
   const email = uniqueEmail('e2e-settings');
+  // cal_com_organizer_email is globally unique across organizations — a fixed
+  // literal here would collide with a leftover row from a previous run.
+  const organizerEmail = uniqueEmail('e2e-settings-organizer');
   await register(page, email, 'שם ראשוני');
   await expect(page).toHaveURL(/\/$/);
 
@@ -18,14 +21,14 @@ test('settings page: update profile name and Cal.com organizer email', async ({ 
   // The registering user is the org owner, so the Cal.com field is editable
   const organizerInput = page.locator('input[placeholder="organizer@example.com"]');
   await expect(organizerInput).toBeEnabled();
-  await organizerInput.fill('organizer-test@example.com');
+  await organizerInput.fill(organizerEmail);
 
   await page.click('button:has-text("שמירה")');
   await expect(page.getByText('הפרטים נשמרו בהצלחה')).toBeVisible({ timeout: 10000 });
 
   await page.reload();
   await expect(page.locator('input[placeholder="organizer@example.com"]')).toHaveValue(
-    'organizer-test@example.com'
+    organizerEmail
   );
 
   // Full name is stored in both auth user_metadata (sidebar) and profiles
