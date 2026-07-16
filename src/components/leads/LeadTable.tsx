@@ -60,21 +60,13 @@ export function LeadTable({ leads, onStatusChange, onDeleteRequest }: LeadTableP
               </div>
             </td>
             <td className="px-4 py-3">
-              <div className="flex gap-3 text-xs">
-                <Link to={`/leads/${lead.id}`} className="text-blue-600 hover:underline">
-                  צפייה
-                </Link>
-                <Link to={`/leads/${lead.id}/edit`} className="text-gray-600 hover:underline">
-                  עריכה
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => onDeleteRequest(lead)}
-                  className="text-red-600 hover:underline"
-                >
-                  מחיקה
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => onDeleteRequest(lead)}
+                className="text-xs text-red-600 hover:underline"
+              >
+                מחיקה
+              </button>
             </td>
           </tr>
         ))}

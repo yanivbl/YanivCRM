@@ -9,7 +9,7 @@ export function DashboardLayout({ children }: { children?: ReactNode }) {
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileNav />
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6">{children ?? <Outlet />}</main>
+        <main className="w-full flex-1 px-4 py-6 sm:px-6">{children ?? <Outlet />}</main>
       </div>
     </div>
   );

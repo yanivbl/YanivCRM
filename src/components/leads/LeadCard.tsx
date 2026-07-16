@@ -27,10 +27,7 @@ export function LeadCard({ lead, onDeleteRequest }: LeadCardProps) {
         <dt className="text-gray-400">מחיר</dt>
         <dd>{formatPrice(lead.price)}</dd>
       </dl>
-      <div className="mt-3 flex gap-4 text-xs">
-        <Link to={`/leads/${lead.id}/edit`} className="text-gray-600 hover:underline">
-          עריכה
-        </Link>
+      <div className="mt-3 flex text-xs">
         <button
           type="button"
           onClick={() => onDeleteRequest(lead)}
