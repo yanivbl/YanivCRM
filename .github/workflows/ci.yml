@@ -51,3 +51,9 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+      # Downloading that artifact (or the raw job log) back out via the API
+      # requires an authenticated token either way - this surfaces the same
+      # failure detail as a check-run annotation instead, which is readable
+      # through the public, unauthenticated GitHub API.
+      - run: node scripts/report-e2e-failures.cjs
+        if: failure()
