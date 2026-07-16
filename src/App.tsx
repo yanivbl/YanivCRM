@@ -14,6 +14,7 @@ import { LeadEditPage } from './pages/LeadEditPage';
 import { LeadDetailPage } from './pages/LeadDetailPage';
 import { TeamPage } from './pages/TeamPage';
 import { ActivityLogPage } from './pages/ActivityLogPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
               <Route path="/leads/:id/edit" element={<LeadEditPage />} />
               <Route path="/team" element={<TeamPage />} />
               <Route path="/activity" element={<ActivityLogPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFoundPage />} />

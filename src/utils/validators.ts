@@ -8,7 +8,7 @@ export interface LeadFormErrors {
   website_url?: string;
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[\d+\-\s()]{6,20}$/;
 const URL_RE = /^https?:\/\/[^\s]+\.[^\s]+$/i;
 

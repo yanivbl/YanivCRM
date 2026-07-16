@@ -3,6 +3,7 @@ export type Role = 'owner' | 'admin' | 'member';
 export interface Organization {
   id: string;
   name: string;
+  cal_com_organizer_email: string | null;
   created_at: string;
 }
 
