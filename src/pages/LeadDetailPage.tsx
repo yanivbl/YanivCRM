@@ -61,7 +61,7 @@ export function LeadDetailPage() {
       </div>
 
       <LeadWebsiteAnalysis leadId={lead.id} defaultUrl={lead.website_url} />
-      <LeadTasks leadId={lead.id} orgId={lead.org_id} />
+      <LeadTasks lead={lead} />
       <LeadMeetings leadId={lead.id} />
       <LeadNotes leadId={lead.id} />
       <LeadActivityLog leadId={lead.id} />

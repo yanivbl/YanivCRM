@@ -10,6 +10,7 @@ import { LeadTable } from '../components/leads/LeadTable';
 import { LeadCard } from '../components/leads/LeadCard';
 import { EmptyLeadsState } from '../components/leads/EmptyLeadsState';
 import { DeleteLeadDialog } from '../components/leads/DeleteLeadDialog';
+import { AddTaskModal } from '../components/tasks/AddTaskModal';
 import { SkeletonRow, SkeletonCard } from '../components/ui/Skeleton';
 import { Button } from '../components/ui/Button';
 
@@ -21,6 +22,7 @@ export function LeadsListPage() {
   const { leads, loading, error, refetch } = useLeads(q, status);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [leadForNewTask, setLeadForNewTask] = useState<Lead | null>(null);
 
   const setQuery = (value: string) => {
     setSearchParams((prev) => {
@@ -104,11 +106,17 @@ export function LeadsListPage() {
               leads={leads}
               onStatusChange={handleStatusChange}
               onDeleteRequest={setLeadToDelete}
+              onAddTaskRequest={setLeadForNewTask}
             />
           </div>
           <div className="flex flex-col gap-3 md:hidden">
             {leads.map((lead) => (
-              <LeadCard key={lead.id} lead={lead} onDeleteRequest={setLeadToDelete} />
+              <LeadCard
+                key={lead.id}
+                lead={lead}
+                onDeleteRequest={setLeadToDelete}
+                onAddTaskRequest={setLeadForNewTask}
+              />
             ))}
           </div>
         </>
@@ -120,6 +128,14 @@ export function LeadsListPage() {
           deleting={deleting}
           onConfirm={handleDeleteConfirm}
           onCancel={() => setLeadToDelete(null)}
+        />
+      )}
+
+      {leadForNewTask && (
+        <AddTaskModal
+          lead={leadForNewTask}
+          onClose={() => setLeadForNewTask(null)}
+          onCreated={() => {}}
         />
       )}
     </div>

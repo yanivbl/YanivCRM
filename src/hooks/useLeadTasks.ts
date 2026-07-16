@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { useAuth } from './useAuth';
-import type { Task, TaskPriority } from '../types/task';
+import type { Task } from '../types/task';
 
-export function useLeadTasks(leadId: string | undefined, orgId: string | null) {
-  const { user } = useAuth();
+export function useLeadTasks(leadId: string) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   const refetch = useCallback(() => setReloadKey((k) => k + 1), []);
@@ -34,23 +31,6 @@ export function useLeadTasks(leadId: string | undefined, orgId: string | null) {
     };
   }, [leadId, reloadKey]);
 
-  const addTask = async (title: string, priority: TaskPriority, dueDate: string | null) => {
-    if (!leadId || !orgId || !user) return { error: 'missing lead, org, or user' };
-    setSubmitting(true);
-    const { error } = await supabase.from('tasks').insert({
-      org_id: orgId,
-      lead_id: leadId,
-      title,
-      priority,
-      due_date: dueDate,
-      created_by: user.id,
-      assignee_id: user.id,
-    });
-    setSubmitting(false);
-    if (!error) refetch();
-    return { error: error?.message ?? null };
-  };
-
   const toggleDone = async (task: Task) => {
     const nextStatus = task.status === 'open' ? 'done' : 'open';
     const nextCompletedAt = nextStatus === 'done' ? new Date().toISOString() : null;
@@ -76,5 +56,5 @@ export function useLeadTasks(leadId: string | undefined, orgId: string | null) {
     return { error: error?.message ?? null };
   };
 
-  return { tasks, loading, submitting, addTask, toggleDone, deleteTask };
+  return { tasks, loading, refetch, toggleDone, deleteTask };
 }

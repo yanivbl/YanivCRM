@@ -1,36 +1,17 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLeadTasks } from '../../hooks/useLeadTasks';
 import { formatDateOnly, isPastDateOnly } from '../../utils/formatters';
 import { PriorityBadge } from './PriorityBadge';
+import { AddTaskModal } from './AddTaskModal';
 import { Button } from '../ui/Button';
-import { TextField } from '../ui/TextField';
-import { Select } from '../ui/Select';
 import { Spinner } from '../ui/Spinner';
-import { PRIORITY_LABELS, PRIORITY_OPTIONS, type TaskPriority } from '../../types/task';
+import type { Lead } from '../../types/lead';
 
-export function LeadTasks({ leadId, orgId }: { leadId: string; orgId: string | null }) {
-  const { tasks, loading, submitting, addTask, toggleDone, deleteTask } = useLeadTasks(leadId, orgId);
-  const [title, setTitle] = useState('');
-  const [priority, setPriority] = useState<TaskPriority>('medium');
-  const [dueDate, setDueDate] = useState('');
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    const trimmed = title.trim();
-    if (!trimmed) return;
-
-    const { error } = await addTask(trimmed, priority, dueDate || null);
-    if (error) {
-      toast.error('הוספת המשימה נכשלה');
-      return;
-    }
-    setTitle('');
-    setPriority('medium');
-    setDueDate('');
-    toast.success('המשימה נוספה');
-  };
+export function LeadTasks({ lead }: { lead: Lead }) {
+  const { tasks, loading, toggleDone, deleteTask, refetch } = useLeadTasks(lead.id);
+  const [showCreate, setShowCreate] = useState(false);
 
   const handleToggle = async (task: (typeof tasks)[number]) => {
     const { error } = await toggleDone(task);
@@ -45,43 +26,10 @@ export function LeadTasks({ leadId, orgId }: { leadId: string; orgId: string | n
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6">
-      <h3 className="mb-4 text-lg font-semibold text-gray-900">משימות</h3>
-
-      <form onSubmit={handleSubmit} className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end">
-        <div className="flex-1">
-          <TextField
-            label="משימה חדשה"
-            name="title"
-            placeholder="לדוגמה: לחזור עם הצעת מחיר"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-        <Select
-          label="עדיפות"
-          name="priority"
-          value={priority}
-          onChange={(e) => setPriority(e.target.value as TaskPriority)}
-          className="sm:w-32"
-        >
-          {PRIORITY_OPTIONS.map((p) => (
-            <option key={p} value={p}>
-              {PRIORITY_LABELS[p]}
-            </option>
-          ))}
-        </Select>
-        <TextField
-          label="תאריך יעד"
-          name="dueDate"
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          className="sm:w-40"
-        />
-        <Button type="submit" disabled={submitting || !title.trim()}>
-          {submitting ? 'מוסיף...' : 'הוספה'}
-        </Button>
-      </form>
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">משימות</h3>
+        <Button onClick={() => setShowCreate(true)}>+ משימה חדשה</Button>
+      </div>
 
       {loading ? (
         <Spinner />
@@ -131,6 +79,10 @@ export function LeadTasks({ leadId, orgId }: { leadId: string; orgId: string | n
             );
           })}
         </ul>
+      )}
+
+      {showCreate && (
+        <AddTaskModal lead={lead} onClose={() => setShowCreate(false)} onCreated={refetch} />
       )}
     </div>
   );

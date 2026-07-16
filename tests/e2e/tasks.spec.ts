@@ -19,9 +19,10 @@ test('add a task on a lead, mark it done, and see it on the org-wide tasks page'
   await page.waitForURL('**/leads/*');
 
   await page.waitForSelector('text=משימות');
+  await page.click('button:has-text("+ משימה חדשה")');
   await page.fill('input[name="title"]', taskTitle);
   await page.selectOption('select[name="priority"]', 'high');
-  await page.click('button:has-text("הוספה")');
+  await page.click('button:has-text("הוספת משימה")');
 
   const taskRow = page.locator('li', { hasText: taskTitle });
   await expect(taskRow).toBeVisible({ timeout: 10000 });
@@ -45,4 +46,35 @@ test('add a task on a lead, mark it done, and see it on the org-wide tasks page'
 
   await page.selectOption('select[aria-label="סינון לפי סטטוס"]', 'done');
   await expect(page.locator('tr', { hasText: taskTitle })).toBeVisible();
+});
+
+test('add a task from the leads list with a due date, without opening the lead', async ({ page }) => {
+  const email = uniqueEmail('e2e-tasks-list');
+  const leadName = 'ליד לבדיקת משימה מהרשימה';
+  const taskTitle = 'שיחת מעקב';
+  const dueDate = '2026-08-01';
+
+  await register(page, email, 'משתמש בדיקת רשימה');
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto('/leads/new');
+  await page.waitForSelector('input[name="name"]');
+  await page.fill('input[name="name"]', leadName);
+  await page.click('button:has-text("יצירה")');
+  await page.waitForURL('**/leads');
+
+  // Add the task from the leads LIST page itself, not from inside the lead.
+  await page.locator('tr', { hasText: leadName }).getByRole('button', { name: '+ משימה' }).click();
+  await expect(page.getByRole('heading', { name: `משימה חדשה עבור ${leadName}` })).toBeVisible();
+  await page.fill('input[name="title"]', taskTitle);
+  await page.fill('input[name="dueDate"]', dueDate);
+  await page.click('button:has-text("הוספת משימה")');
+  await expect(page.getByRole('heading', { name: `משימה חדשה עבור ${leadName}` })).not.toBeVisible();
+
+  // Confirm it landed on the lead itself, due date included.
+  await page.getByRole('link', { name: leadName }).click();
+  await page.waitForURL('**/leads/*');
+  const taskRow = page.locator('li', { hasText: taskTitle });
+  await expect(taskRow).toBeVisible({ timeout: 10000 });
+  await expect(taskRow).toContainText('1.8.2026');
 });
