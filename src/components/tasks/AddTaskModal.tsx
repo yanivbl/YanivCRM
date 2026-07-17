@@ -63,7 +63,7 @@ export function AddTaskModal({ lead, onClose, onCreated }: AddTaskModalProps) {
   };
 
   return (
-    <Modal title={`משימה חדשה עבור ${lead.name}`} onClose={onClose}>
+    <Modal title={`משימה חדשה עבור ${lead.name}`} onClose={onClose} size="md">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <TextField
           label="כותרת *"

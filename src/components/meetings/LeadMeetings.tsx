@@ -100,13 +100,13 @@ export function LeadMeetings({ lead }: { lead: Lead }) {
       )}
 
       {showCreate && (
-        <Modal title="פגישה חדשה" onClose={() => setShowCreate(false)}>
+        <Modal title="פגישה חדשה" onClose={() => setShowCreate(false)} size="md">
           <MeetingForm submitLabel="יצירה" onSubmit={handleCreate} onCancel={() => setShowCreate(false)} />
         </Modal>
       )}
 
       {editingMeeting && (
-        <Modal title="עריכת פגישה" onClose={() => setEditingMeeting(null)}>
+        <Modal title="עריכת פגישה" onClose={() => setEditingMeeting(null)} size="md">
           <MeetingForm
             initialValues={{
               starts_at: toDateTimeLocal(editingMeeting.starts_at),

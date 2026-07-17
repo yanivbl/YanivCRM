@@ -90,7 +90,7 @@ export function LeadCalls({ lead }: { lead: Lead }) {
       )}
 
       {showCreate && (
-        <Modal title="תיעוד שיחה" onClose={() => setShowCreate(false)}>
+        <Modal title="תיעוד שיחה" onClose={() => setShowCreate(false)} size="md">
           <CallForm onSubmit={handleLogCall} onCancel={() => setShowCreate(false)} />
         </Modal>
       )}
