@@ -8,6 +8,7 @@ import { StatusBadge } from '../components/leads/StatusBadge';
 import { LeadTasks } from '../components/tasks/LeadTasks';
 import { LeadNotes } from '../components/leads/LeadNotes';
 import { LeadMeetings } from '../components/meetings/LeadMeetings';
+import { LeadCalls } from '../components/calls/LeadCalls';
 import { LeadWebsiteAnalysis } from '../components/analysis/LeadWebsiteAnalysis';
 import { LeadActivityLog } from '../components/activity/LeadActivityLog';
 import { DeleteLeadDialog } from '../components/leads/DeleteLeadDialog';
@@ -78,6 +79,7 @@ export function LeadDetailPage() {
           <LeadDetailCard lead={lead} />
           <LeadWebsiteAnalysis leadId={lead.id} defaultUrl={lead.website_url} />
           <LeadTasks lead={lead} />
+          <LeadCalls lead={lead} />
           <LeadMeetings lead={lead} />
         </div>
         <div className="flex flex-col gap-4">

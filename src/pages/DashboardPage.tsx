@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { CheckCircle2, CalendarClock, Sparkles, Briefcase, Inbox, AlertTriangle, ListTodo } from 'lucide-react';
+import { CheckCircle2, CalendarClock, Sparkles, Briefcase, Inbox, AlertTriangle, ListTodo, Phone } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useLeadStats } from '../hooks/useLeadStats';
 import { useTaskStats } from '../hooks/useTaskStats';
+import { useCallStats } from '../hooks/useCallStats';
 import { StatCard } from '../components/dashboard/StatCard';
 import { StatusBadge } from '../components/leads/StatusBadge';
 import { PriorityBadge } from '../components/tasks/PriorityBadge';
@@ -14,6 +15,7 @@ export function DashboardPage() {
   const { user } = useAuth();
   const { stats, recentLeads, loading } = useLeadStats();
   const { stats: taskStats, overdueTasks, loading: taskStatsLoading } = useTaskStats();
+  const { callsThisMonth, loading: callStatsLoading } = useCallStats();
   const fullName = (user?.user_metadata?.full_name as string | undefined)?.trim() || user?.email || '';
 
   return (
@@ -28,11 +30,17 @@ export function DashboardPage() {
           <Spinner />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard label="עסקאות שנסגרו" value={stats.dealClosed} icon={CheckCircle2} tint="green" />
           <StatCard label="פגישות שנקבעו" value={stats.meetingScheduled} icon={CalendarClock} tint="amber" />
           <StatCard label="לידים חדשים" value={stats.newCount} icon={Sparkles} tint="violet" />
           <StatCard label="סך הלידים" value={stats.total} icon={Briefcase} tint="blue" />
+          <StatCard
+            label="שיחות החודש"
+            value={callStatsLoading ? 0 : (callsThisMonth ?? 0)}
+            icon={Phone}
+            tint="violet"
+          />
         </div>
       )}
 
