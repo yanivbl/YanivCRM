@@ -44,7 +44,13 @@ export function LeadTable({ leads, onStatusChange, onDeleteRequest }: LeadTableP
             <td className="whitespace-nowrap px-4 py-3 text-gray-600">{formatPrice(lead.price)}</td>
             <td className="whitespace-nowrap px-4 py-3">
               <div className="flex flex-nowrap items-center gap-2">
-                <StatusBadge status={lead.status} />
+                {/* Fixed width so the select below starts at the same offset
+                    in every row, regardless of how long that row's status
+                    label is — otherwise the dropdowns end up staggered
+                    instead of lining up in a straight column. */}
+                <div className="w-36">
+                  <StatusBadge status={lead.status} />
+                </div>
                 <select
                   aria-label="שינוי סטטוס"
                   value={lead.status}
