@@ -14,7 +14,7 @@ export function LeadTable({ leads, onStatusChange, onDeleteRequest }: LeadTableP
   return (
     <table className="hidden w-full text-start text-sm md:table">
       <thead>
-        <tr className="border-b border-gray-200 text-xs text-gray-500">
+        <tr className="whitespace-nowrap border-b border-gray-200 text-xs text-gray-500">
           <th className="px-4 py-2 text-start font-medium">שם</th>
           <th className="px-4 py-2 text-start font-medium">חברה</th>
           <th className="px-4 py-2 text-start font-medium">טלפון</th>
@@ -28,22 +28,22 @@ export function LeadTable({ leads, onStatusChange, onDeleteRequest }: LeadTableP
       <tbody className="divide-y divide-gray-100">
         {leads.map((lead) => (
           <tr key={lead.id} className="hover:bg-gray-50">
-            <td className="px-4 py-3 font-medium text-gray-900">
+            <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900">
               <Link to={`/leads/${lead.id}`} className="hover:underline">
                 {lead.name}
               </Link>
             </td>
-            <td className="px-4 py-3 text-gray-600">{lead.company || '—'}</td>
-            <td className="px-4 py-3 text-gray-600" dir="ltr">
+            <td className="whitespace-nowrap px-4 py-3 text-gray-600">{lead.company || '—'}</td>
+            <td className="whitespace-nowrap px-4 py-3 text-gray-600" dir="ltr">
               {lead.phone || '—'}
             </td>
-            <td className="px-4 py-3 text-gray-600" dir="ltr">
+            <td className="whitespace-nowrap px-4 py-3 text-gray-600" dir="ltr">
               {lead.email || '—'}
             </td>
-            <td className="px-4 py-3 text-gray-600">{lead.city || '—'}</td>
-            <td className="px-4 py-3 text-gray-600">{formatPrice(lead.price)}</td>
-            <td className="px-4 py-3">
-              <div className="flex items-center gap-2">
+            <td className="whitespace-nowrap px-4 py-3 text-gray-600">{lead.city || '—'}</td>
+            <td className="whitespace-nowrap px-4 py-3 text-gray-600">{formatPrice(lead.price)}</td>
+            <td className="whitespace-nowrap px-4 py-3">
+              <div className="flex flex-nowrap items-center gap-2">
                 <StatusBadge status={lead.status} />
                 <select
                   aria-label="שינוי סטטוס"
@@ -59,7 +59,7 @@ export function LeadTable({ leads, onStatusChange, onDeleteRequest }: LeadTableP
                 </select>
               </div>
             </td>
-            <td className="px-4 py-3">
+            <td className="whitespace-nowrap px-4 py-3">
               <button
                 type="button"
                 onClick={() => onDeleteRequest(lead)}
