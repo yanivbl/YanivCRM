@@ -18,12 +18,12 @@ export function CallForm({ onSubmit, onCancel }: CallFormProps) {
   // onChange would need to read the OTHER field out of a render closure that
   // can go stale between two fast form fills.
   const [nowDate, nowTime] = toDateTimeLocal(new Date().toISOString()).split('T');
-  const [direction, setDirection] = useState<CallDirection>('outgoing');
+  const [direction, setDirection] = useState<CallDirection>('incoming');
+  const [durationMinutes, setDurationMinutes] = useState('');
   const [date, setDate] = useState(nowDate);
   const [time, setTime] = useState(nowTime);
-  const [durationMinutes, setDurationMinutes] = useState('');
   const [summary, setSummary] = useState('');
-  const [nextSteps, setNextSteps] = useState('');
+  const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -41,7 +41,7 @@ export function CallForm({ onSubmit, onCancel }: CallFormProps) {
         called_at: `${date}T${time}`,
         duration_minutes: durationMinutes,
         summary,
-        next_steps: nextSteps,
+        transcript,
       });
     } finally {
       setSubmitting(false);
@@ -50,38 +50,10 @@ export function CallForm({ onSubmit, onCancel }: CallFormProps) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-      <Select label="כיוון השיחה" name="direction" value={direction} onChange={(e) => setDirection(e.target.value as CallDirection)}>
-        {DIRECTION_OPTIONS.map((d) => (
-          <option key={d} value={d}>
-            {DIRECTION_LABELS[d]}
-          </option>
-        ))}
-      </Select>
       <div className="flex gap-3">
-        <div className="flex-1">
-          <TextField
-            label="תאריך"
-            name="called_at_date"
-            type="date"
-            dir="ltr"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            error={error ?? undefined}
-          />
-        </div>
-        <div className="w-32">
-          <TextField
-            label="שעה"
-            name="called_at_time"
-            type="time"
-            dir="ltr"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-          />
-        </div>
         <div className="w-28">
           <TextField
-            label="משך (דק')"
+            label="משך (דקות)"
             name="durationMinutes"
             type="number"
             min="0"
@@ -90,25 +62,77 @@ export function CallForm({ onSubmit, onCancel }: CallFormProps) {
             onChange={(e) => setDurationMinutes(e.target.value)}
           />
         </div>
+        <div className="flex-1">
+          <Select
+            label="כיוון השיחה *"
+            name="direction"
+            value={direction}
+            onChange={(e) => setDirection(e.target.value as CallDirection)}
+          >
+            {DIRECTION_OPTIONS.map((d) => (
+              <option key={d} value={d}>
+                {DIRECTION_LABELS[d]}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
+
+      <div>
+        <span className="text-sm font-medium text-gray-700">תאריך ושעה *</span>
+        <div className="mt-1 flex gap-3">
+          <div className="flex-1">
+            <TextField
+              name="called_at_date"
+              type="date"
+              dir="ltr"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              error={error ?? undefined}
+            />
+          </div>
+          <div className="w-32">
+            <TextField
+              name="called_at_time"
+              type="time"
+              dir="ltr"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-1">
         <label htmlFor="call-summary" className="text-sm font-medium text-gray-700">
-          תוכן השיחה
+          הערות מהשיחה
         </label>
         <textarea
           id="call-summary"
           rows={3}
+          placeholder="מה דובר בשיחה? מה הלקוח אמר? אילו פעולות נדרש לעשות?"
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
         />
       </div>
-      <TextField
-        label="שלב הבא"
-        name="nextSteps"
-        value={nextSteps}
-        onChange={(e) => setNextSteps(e.target.value)}
-      />
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="call-transcript" className="text-sm font-medium text-gray-700">
+          תמלול
+        </label>
+        <textarea
+          id="call-transcript"
+          rows={3}
+          placeholder="התמלול המלא של השיחה (לא חובה - שימושי לניתוח AI)"
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          value={transcript}
+          onChange={(e) => setTranscript(e.target.value)}
+        />
+        <p className="text-xs text-gray-400">
+          הדבק כאן תמלול מ-Zoom, Meet, או כל מקור אחר – לשימוש לניתוח AI בעתיד
+        </p>
+      </div>
 
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={submitting}>

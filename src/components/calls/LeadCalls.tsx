@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PhoneIncoming, PhoneOutgoing, Trash2 } from 'lucide-react';
+import { FileText, PhoneIncoming, PhoneOutgoing, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLeadCalls } from '../../hooks/useLeadCalls';
 import { formatDate } from '../../utils/formatters';
@@ -77,10 +77,10 @@ export function LeadCalls({ lead }: { lead: Lead }) {
                   </button>
                 </div>
                 {call.summary && <p className="mt-2 text-sm text-gray-600">{call.summary}</p>}
-                {call.next_steps && (
-                  <p className="mt-1 text-sm text-gray-500">
-                    <span className="font-medium text-gray-600">שלב הבא: </span>
-                    {call.next_steps}
+                {call.transcript && (
+                  <p className="mt-1 flex items-center gap-1 text-xs text-gray-400">
+                    <FileText size={12} />
+                    כולל תמלול מלא
                   </p>
                 )}
               </li>

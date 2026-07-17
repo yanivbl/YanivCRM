@@ -44,7 +44,7 @@ export function useLeadCalls(leadId: string, orgId: string) {
       called_at: new Date(values.called_at).toISOString(),
       duration_minutes: values.duration_minutes.trim() ? Number(values.duration_minutes) : null,
       summary: values.summary.trim() || null,
-      next_steps: values.next_steps.trim() || null,
+      transcript: values.transcript.trim() || null,
       created_by: user.id,
     });
     if (!error) refetch();

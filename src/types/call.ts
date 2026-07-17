@@ -7,7 +7,7 @@ export interface Call {
   direction: CallDirection;
   duration_minutes: number | null;
   summary: string | null;
-  next_steps: string | null;
+  transcript: string | null;
   called_at: string;
   created_by: string | null;
   created_at: string;
@@ -18,7 +18,7 @@ export type CallFormValues = {
   called_at: string;
   duration_minutes: string;
   summary: string;
-  next_steps: string;
+  transcript: string;
 };
 
 export const DIRECTION_LABELS: Record<CallDirection, string> = {

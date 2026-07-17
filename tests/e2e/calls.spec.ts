@@ -5,7 +5,7 @@ test('log a call with all fields, see it in the history, then delete it', async 
   const email = uniqueEmail('e2e-calls');
   const leadName = 'ליד לבדיקת שיחות';
   const summary = 'דיברנו על ההצעה, מעוניין להמשיך';
-  const nextSteps = 'לשלוח חוזה';
+  const transcript = 'לקוח: שלום, קיבלתי את ההצעה ואני מעוניין להתקדם. נציג: מעולה, אשלח חוזה היום.';
 
   await register(page, email, 'משתמש בדיקת שיחות');
   await expect(page).toHaveURL(/\/$/);
@@ -25,7 +25,7 @@ test('log a call with all fields, see it in the history, then delete it', async 
   await page.fill('input[name="called_at_time"]', '10:15');
   await page.fill('input[name="durationMinutes"]', '12');
   await page.fill('#call-summary', summary);
-  await page.fill('input[name="nextSteps"]', nextSteps);
+  await page.fill('#call-transcript', transcript);
   await page.getByRole('button', { name: 'תיעוד שיחה', exact: true }).click();
   await expect(page.getByText('השיחה תועדה בהצלחה')).toBeVisible();
 
@@ -34,7 +34,7 @@ test('log a call with all fields, see it in the history, then delete it', async 
   await expect(callRow).toContainText('10.7.2026');
   await expect(callRow).toContainText("12 דק'");
   await expect(callRow).toContainText(summary);
-  await expect(callRow).toContainText(nextSteps);
+  await expect(callRow).toContainText('כולל תמלול מלא');
 
   await callRow.getByRole('button', { name: 'מחיקת שיחה' }).click();
   await page.getByRole('button', { name: 'כן, מחק' }).click();
