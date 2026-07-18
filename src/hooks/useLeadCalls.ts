@@ -57,5 +57,33 @@ export function useLeadCalls(leadId: string, orgId: string) {
     return { error: error?.message ?? null };
   };
 
-  return { calls, loading, logCall, deleteCall };
+  // Uploads to Storage, then invokes transcribe-call (Whisper + Claude
+  // analysis) and waits for it to finish — both steps report their own error
+  // separately, since a caller needs to know which one actually failed.
+  const uploadRecording = async (call: Call, file: File) => {
+    const path = `${orgId}/${call.id}/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from('call-recordings').upload(path, file, {
+      contentType: file.type || 'audio/mpeg',
+    });
+    if (uploadError) return { error: uploadError.message };
+
+    const { error: updateError } = await supabase.from('calls').update({ audio_url: path }).eq('id', call.id);
+    if (updateError) return { error: updateError.message };
+    refetch();
+
+    return retryTranscription(call.id);
+  };
+
+  // Re-invokes transcription for a call that already has audio uploaded —
+  // used both right after upload and for the "retry" action on a failed one.
+  const retryTranscription = async (callId: string) => {
+    const { data, error: invokeError } = await supabase.functions.invoke('transcribe-call', {
+      body: { call_id: callId },
+    });
+    refetch();
+    if (invokeError || data?.error) return { error: data?.error ?? invokeError?.message ?? 'Transcription failed' };
+    return { error: null };
+  };
+
+  return { calls, loading, logCall, deleteCall, uploadRecording, retryTranscription };
 }

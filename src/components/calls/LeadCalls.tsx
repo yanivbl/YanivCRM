@@ -8,12 +8,13 @@ import { Spinner } from '../ui/Spinner';
 import { Modal } from '../ui/Modal';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { CallForm } from './CallForm';
+import { CallAudioSection } from './CallAudioSection';
 import { DIRECTION_LABELS } from '../../types/call';
 import type { Call, CallFormValues } from '../../types/call';
 import type { Lead } from '../../types/lead';
 
 export function LeadCalls({ lead }: { lead: Lead }) {
-  const { calls, loading, logCall, deleteCall } = useLeadCalls(lead.id, lead.org_id);
+  const { calls, loading, logCall, deleteCall, uploadRecording, retryTranscription } = useLeadCalls(lead.id, lead.org_id);
   const [showCreate, setShowCreate] = useState(false);
   const [deletingCall, setDeletingCall] = useState<Call | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -77,12 +78,17 @@ export function LeadCalls({ lead }: { lead: Lead }) {
                   </button>
                 </div>
                 {call.summary && <p className="mt-2 text-sm text-gray-600">{call.summary}</p>}
-                {call.transcript && (
+                {call.transcript && !call.transcription_status && (
                   <p className="mt-1 flex items-center gap-1 text-xs text-gray-400">
                     <FileText size={12} />
-                    כולל תמלול מלא
+                    כולל תמלול מלא (הוזן ידנית)
                   </p>
                 )}
+                <CallAudioSection
+                  call={call}
+                  onUpload={(file) => uploadRecording(call, file)}
+                  onRetry={() => retryTranscription(call.id)}
+                />
               </li>
             );
           })}
