@@ -130,7 +130,8 @@ export function CallForm({ onSubmit, onCancel }: CallFormProps) {
           onChange={(e) => setTranscript(e.target.value)}
         />
         <p className="text-xs text-gray-400">
-          הדבק כאן תמלול מ-Zoom, Meet, או כל מקור אחר – לשימוש לניתוח AI בעתיד
+          הדבק כאן תמלול מ-Zoom, Meet, או כל מקור אחר – לשימוש לניתוח AI בעתיד. לחלופין, ניתן לשמור את
+          השיחה ואז להעלות קובץ הקלטה (mp3, wav, m4a) לתמלול וניתוח AI אוטומטיים.
         </p>
       </div>
 
