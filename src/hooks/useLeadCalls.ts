@@ -61,7 +61,12 @@ export function useLeadCalls(leadId: string, orgId: string) {
   // analysis) and waits for it to finish — both steps report their own error
   // separately, since a caller needs to know which one actually failed.
   const uploadRecording = async (call: Call, file: File) => {
-    const path = `${orgId}/${call.id}/${Date.now()}-${file.name}`;
+    // Storage keys must stay ASCII-safe — embedding the original filename
+    // breaks when it contains Hebrew or other non-ASCII characters (Supabase
+    // Storage rejected it as "Invalid key"), so only the extension survives.
+    const extMatch = /\.([a-zA-Z0-9]+)$/.exec(file.name);
+    const ext = extMatch ? extMatch[1].toLowerCase() : 'dat';
+    const path = `${orgId}/${call.id}/${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage.from('call-recordings').upload(path, file, {
       contentType: file.type || 'audio/mpeg',
     });
