@@ -88,7 +88,11 @@ async function analyzeTranscript(transcript: string): Promise<Record<string, unk
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-5',
+      // Haiku over Sonnet here: this is a bounded structured-extraction task
+      // (fixed fields, forced tool_choice), not open-ended reasoning, so the
+      // faster model cuts the wait without a real quality trade-off — and
+      // that latency is exactly what the "speed up analysis" ask is about.
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 2048,
       system: SYSTEM_PROMPT,
       tools: [ANALYSIS_TOOL],

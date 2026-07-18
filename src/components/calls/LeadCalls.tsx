@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, PhoneIncoming, PhoneOutgoing, Trash2 } from 'lucide-react';
+import { FileText, PhoneIncoming, PhoneOutgoing, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLeadCalls } from '../../hooks/useLeadCalls';
 import { formatDate } from '../../utils/formatters';
@@ -14,8 +14,12 @@ import type { Call, CallFormValues } from '../../types/call';
 import type { Lead } from '../../types/lead';
 
 export function LeadCalls({ lead }: { lead: Lead }) {
-  const { calls, loading, logCall, deleteCall, uploadRecording, retryTranscription } = useLeadCalls(lead.id, lead.org_id);
+  const { calls, loading, logCall, updateCall, deleteCall, uploadRecording, retryTranscription } = useLeadCalls(
+    lead.id,
+    lead.org_id
+  );
   const [showCreate, setShowCreate] = useState(false);
+  const [editingCall, setEditingCall] = useState<Call | null>(null);
   const [deletingCall, setDeletingCall] = useState<Call | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -27,6 +31,17 @@ export function LeadCalls({ lead }: { lead: Lead }) {
     }
     toast.success('השיחה תועדה בהצלחה');
     setShowCreate(false);
+  };
+
+  const handleUpdateCall = async (values: CallFormValues) => {
+    if (!editingCall) return;
+    const { error } = await updateCall(editingCall, values);
+    if (error) {
+      toast.error('עדכון השיחה נכשל');
+      return;
+    }
+    toast.success('השיחה עודכנה בהצלחה');
+    setEditingCall(null);
   };
 
   const handleDeleteConfirm = async () => {
@@ -68,14 +83,24 @@ export function LeadCalls({ lead }: { lead: Lead }) {
                       <span className="font-normal text-gray-400">· {call.duration_minutes} דק'</span>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setDeletingCall(call)}
-                    aria-label="מחיקת שיחה"
-                    className="shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditingCall(call)}
+                      aria-label="עריכת שיחה"
+                      className="rounded-lg p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeletingCall(call)}
+                      aria-label="מחיקת שיחה"
+                      className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
                 {call.summary && <p className="mt-2 text-sm text-gray-600">{call.summary}</p>}
                 {call.transcript && !call.transcription_status && (
@@ -98,6 +123,12 @@ export function LeadCalls({ lead }: { lead: Lead }) {
       {showCreate && (
         <Modal title="תיעוד שיחה" onClose={() => setShowCreate(false)} size="md">
           <CallForm onSubmit={handleLogCall} onCancel={() => setShowCreate(false)} />
+        </Modal>
+      )}
+
+      {editingCall && (
+        <Modal title="עריכת שיחה" onClose={() => setEditingCall(null)} size="md">
+          <CallForm call={editingCall} onSubmit={handleUpdateCall} onCancel={() => setEditingCall(null)} />
         </Modal>
       )}
 

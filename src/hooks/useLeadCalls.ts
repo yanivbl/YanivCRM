@@ -65,6 +65,43 @@ export function useLeadCalls(leadId: string, orgId: string) {
     return { error: null };
   };
 
+  // Edits an existing call. If the transcript text actually changed, the
+  // analysis is stale, so it's re-run automatically the same way a new
+  // transcript is — clearing it back out (with no audio backing it) instead
+  // clears the now-stale analysis rather than leaving old results attached
+  // to different text.
+  const updateCall = async (call: Call, values: CallFormValues) => {
+    if (!user) return { error: 'missing user' };
+    const transcript = values.transcript.trim() || null;
+    const transcriptChanged = transcript !== (call.transcript ?? null);
+
+    const analysisFields: Partial<Call> = {};
+    if (transcriptChanged) {
+      if (transcript) {
+        analysisFields.transcription_status = 'processing';
+      } else if (!call.audio_url) {
+        analysisFields.transcription_status = null;
+        analysisFields.ai_analysis = null;
+      }
+    }
+
+    const { error } = await supabase
+      .from('calls')
+      .update({
+        direction: values.direction,
+        called_at: new Date(values.called_at).toISOString(),
+        duration_minutes: values.duration_minutes.trim() ? Number(values.duration_minutes) : null,
+        summary: values.summary.trim() || null,
+        transcript,
+        ...analysisFields,
+      })
+      .eq('id', call.id);
+    if (error) return { error: error.message };
+    refetch();
+    if (transcriptChanged && transcript) void retryTranscription(call.id);
+    return { error: null };
+  };
+
   const deleteCall = async (id: string) => {
     const { error } = await supabase.from('calls').delete().eq('id', id);
     if (!error) refetch();
@@ -104,5 +141,5 @@ export function useLeadCalls(leadId: string, orgId: string) {
     return { error: null };
   };
 
-  return { calls, loading, logCall, deleteCall, uploadRecording, retryTranscription };
+  return { calls, loading, logCall, updateCall, deleteCall, uploadRecording, retryTranscription };
 }

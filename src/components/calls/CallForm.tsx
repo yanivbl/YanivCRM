@@ -3,27 +3,28 @@ import { TextField } from '../ui/TextField';
 import { Select } from '../ui/Select';
 import { Button } from '../ui/Button';
 import { toDateTimeLocal } from '../../utils/formatters';
-import { DIRECTION_LABELS, DIRECTION_OPTIONS, type CallDirection, type CallFormValues } from '../../types/call';
+import { DIRECTION_LABELS, DIRECTION_OPTIONS, type Call, type CallDirection, type CallFormValues } from '../../types/call';
 
 interface CallFormProps {
+  call?: Call;
   onSubmit: (values: CallFormValues) => Promise<void>;
   onCancel: () => void;
 }
 
-export function CallForm({ onSubmit, onCancel }: CallFormProps) {
+export function CallForm({ call, onSubmit, onCancel }: CallFormProps) {
   // Defaults to "now" — a call gets logged right after it happens, unlike a
   // meeting which is scheduled ahead of time. Date and time are independent
   // state from the start (not derived by splitting a combined string each
   // render) — see MeetingForm for why that shape is a real bug: each field's
   // onChange would need to read the OTHER field out of a render closure that
   // can go stale between two fast form fills.
-  const [nowDate, nowTime] = toDateTimeLocal(new Date().toISOString()).split('T');
-  const [direction, setDirection] = useState<CallDirection>('incoming');
-  const [durationMinutes, setDurationMinutes] = useState('');
-  const [date, setDate] = useState(nowDate);
-  const [time, setTime] = useState(nowTime);
-  const [summary, setSummary] = useState('');
-  const [transcript, setTranscript] = useState('');
+  const [initialDate, initialTime] = toDateTimeLocal(call?.called_at ?? new Date().toISOString()).split('T');
+  const [direction, setDirection] = useState<CallDirection>(call?.direction ?? 'incoming');
+  const [durationMinutes, setDurationMinutes] = useState(call?.duration_minutes != null ? String(call.duration_minutes) : '');
+  const [date, setDate] = useState(initialDate);
+  const [time, setTime] = useState(initialTime);
+  const [summary, setSummary] = useState(call?.summary ?? '');
+  const [transcript, setTranscript] = useState(call?.transcript ?? '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -137,7 +138,7 @@ export function CallForm({ onSubmit, onCancel }: CallFormProps) {
 
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={submitting}>
-          {submitting ? 'שומר...' : 'תיעוד שיחה'}
+          {submitting ? 'שומר...' : call ? 'עדכון שיחה' : 'תיעוד שיחה'}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
           ביטול
