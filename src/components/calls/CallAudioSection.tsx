@@ -1,5 +1,5 @@
 import { useRef, useState, type DragEvent } from 'react';
-import { UploadCloud, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+import { UploadCloud, ChevronDown, ChevronUp, RefreshCw, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { SENTIMENT_LABELS, type Call } from '../../types/call';
 import { Spinner } from '../ui/Spinner';
@@ -102,39 +102,55 @@ export function CallAudioSection({ call, onUpload, onRetry }: CallAudioSectionPr
 
   if (!call.audio_url && !call.transcription_status) {
     return (
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragActive(true);
-        }}
-        onDragLeave={() => setDragActive(false)}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`mt-2 flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-xs transition-colors ${
-          dragActive ? 'border-blue-400 bg-blue-50 text-blue-600' : 'border-gray-200 text-gray-400 hover:border-gray-300'
-        }`}
-      >
-        {uploading ? (
-          <>
-            <Spinner /> מעלה ומתמלל...
-          </>
-        ) : (
-          <>
-            <UploadCloud size={14} />
-            גרירת קובץ הקלטה (mp3, wav, m4a) או לחיצה לבחירה
-          </>
+      <div className="mt-2 flex flex-col gap-2">
+        {/* A transcript here got saved before auto-analysis existed, or
+            without its text changing since (edits only re-trigger analysis
+            when the text itself changes, to avoid a paid call on every
+            unrelated edit) — this lets it be analyzed on demand either way. */}
+        {call.transcript && (
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="flex w-fit items-center gap-1.5 text-xs text-blue-600 hover:underline"
+          >
+            <Sparkles size={12} />
+            הרצת ניתוח AI על השיחה
+          </button>
         )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,.mp3,.wav,.m4a"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) validateAndUpload(file);
-            e.target.value = '';
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragActive(true);
           }}
-        />
+          onDragLeave={() => setDragActive(false)}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-xs transition-colors ${
+            dragActive ? 'border-blue-400 bg-blue-50 text-blue-600' : 'border-gray-200 text-gray-400 hover:border-gray-300'
+          }`}
+        >
+          {uploading ? (
+            <>
+              <Spinner /> מעלה ומתמלל...
+            </>
+          ) : (
+            <>
+              <UploadCloud size={14} />
+              גרירת קובץ הקלטה (mp3, wav, m4a) או לחיצה לבחירה
+            </>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,.mp3,.wav,.m4a"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) validateAndUpload(file);
+              e.target.value = '';
+            }}
+          />
+        </div>
       </div>
     );
   }
