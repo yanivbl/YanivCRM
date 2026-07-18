@@ -155,8 +155,8 @@ Deno.serve(async (req: Request) => {
   if (!call) {
     return jsonResponse({ error: 'Call not found' }, 404);
   }
-  if (!call.audio_url) {
-    return jsonResponse({ error: 'Call has no uploaded audio' }, 400);
+  if (!call.audio_url && !(call.transcript && call.transcript.trim())) {
+    return jsonResponse({ error: 'Call has neither audio nor transcript' }, 400);
   }
 
   const { data: membership } = await admin
@@ -177,35 +177,42 @@ Deno.serve(async (req: Request) => {
 
   await admin.from('calls').update({ transcription_status: 'processing' }).eq('id', callId);
 
-  const { data: audioBlob, error: downloadError } = await admin.storage.from('call-recordings').download(call.audio_url);
-  if (downloadError || !audioBlob) {
-    return await fail(`Failed to download audio: ${downloadError?.message ?? 'unknown error'}`);
-  }
-
+  // Two sources feed the analysis: an uploaded recording (transcribe via
+  // Whisper first) or a transcript the user already typed/pasted at
+  // creation time (analyze it directly, no Whisper needed).
   let transcript: string;
-  try {
-    const filename = call.audio_url.split('/').pop() ?? 'audio.mp3';
-    const form = new FormData();
-    form.append('file', audioBlob, filename);
-    form.append('model', 'whisper-1');
+  if (call.audio_url) {
+    const { data: audioBlob, error: downloadError } = await admin.storage.from('call-recordings').download(call.audio_url);
+    if (downloadError || !audioBlob) {
+      return await fail(`Failed to download audio: ${downloadError?.message ?? 'unknown error'}`);
+    }
 
-    const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
-      body: form,
-    });
-    if (!whisperRes.ok) {
-      const errText = await whisperRes.text();
-      return await fail(`Whisper transcription failed: ${whisperRes.status} ${errText.slice(0, 300)}`);
+    try {
+      const filename = call.audio_url.split('/').pop() ?? 'audio.mp3';
+      const form = new FormData();
+      form.append('file', audioBlob, filename);
+      form.append('model', 'whisper-1');
+
+      const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
+        body: form,
+      });
+      if (!whisperRes.ok) {
+        const errText = await whisperRes.text();
+        return await fail(`Whisper transcription failed: ${whisperRes.status} ${errText.slice(0, 300)}`);
+      }
+      const whisperJson = await whisperRes.json();
+      transcript = whisperJson.text ?? '';
+      if (!transcript.trim()) {
+        return await fail('Whisper returned an empty transcript');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return await fail(`Whisper transcription failed: ${message}`);
     }
-    const whisperJson = await whisperRes.json();
-    transcript = whisperJson.text ?? '';
-    if (!transcript.trim()) {
-      return await fail('Whisper returned an empty transcript');
-    }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return await fail(`Whisper transcription failed: ${message}`);
+  } else {
+    transcript = call.transcript;
   }
 
   const analysis = await analyzeTranscript(transcript);

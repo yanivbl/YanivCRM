@@ -37,18 +37,32 @@ export function useLeadCalls(leadId: string, orgId: string) {
 
   const logCall = async (values: CallFormValues) => {
     if (!user) return { error: 'missing user' };
-    const { error } = await supabase.from('calls').insert({
-      org_id: orgId,
-      lead_id: leadId,
-      direction: values.direction,
-      called_at: new Date(values.called_at).toISOString(),
-      duration_minutes: values.duration_minutes.trim() ? Number(values.duration_minutes) : null,
-      summary: values.summary.trim() || null,
-      transcript: values.transcript.trim() || null,
-      created_by: user.id,
-    });
-    if (!error) refetch();
-    return { error: error?.message ?? null };
+    const transcript = values.transcript.trim() || null;
+    const { data, error } = await supabase
+      .from('calls')
+      .insert({
+        org_id: orgId,
+        lead_id: leadId,
+        direction: values.direction,
+        called_at: new Date(values.called_at).toISOString(),
+        duration_minutes: values.duration_minutes.trim() ? Number(values.duration_minutes) : null,
+        summary: values.summary.trim() || null,
+        transcript,
+        // Set eagerly so the UI shows the analysis spinner immediately
+        // instead of flashing the upload dropzone until the edge function's
+        // own update lands.
+        transcription_status: transcript ? 'processing' : null,
+        created_by: user.id,
+      })
+      .select('id')
+      .single();
+    if (error) return { error: error.message };
+    refetch();
+    // Fire-and-forget: a pasted transcript gets AI analysis automatically,
+    // same as an uploaded recording, without making the form submit wait
+    // for Claude to respond — retryTranscription refetches when it's done.
+    if (transcript) void retryTranscription(data.id);
+    return { error: null };
   };
 
   const deleteCall = async (id: string) => {

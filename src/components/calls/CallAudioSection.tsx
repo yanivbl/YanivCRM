@@ -76,7 +76,31 @@ export function CallAudioSection({ call, onUpload, onRetry }: CallAudioSectionPr
     toast.success('ההקלטה תומללה ונותחה בהצלחה');
   };
 
-  if (!call.audio_url) {
+  // Checked before the upload dropzone so a transcript typed manually at
+  // creation time (no audio_url at all) still shows its own analysis
+  // progress/result instead of being masked by the "upload a recording" zone.
+  if (call.transcription_status === 'processing' || uploading) {
+    return (
+      <p className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+        <Spinner /> {call.audio_url ? 'מתמלל ומנתח את ההקלטה...' : 'מנתח את השיחה...'}
+      </p>
+    );
+  }
+
+  if (call.transcription_status === 'failed') {
+    return (
+      <button
+        type="button"
+        onClick={handleRetry}
+        className="mt-2 flex items-center gap-1.5 text-xs text-red-600 hover:underline"
+      >
+        <RefreshCw size={12} />
+        {call.audio_url ? 'תמלול ההקלטה נכשל' : 'ניתוח השיחה נכשל'} — נסה שוב
+      </button>
+    );
+  }
+
+  if (!call.audio_url && !call.transcription_status) {
     return (
       <div
         onDragOver={(e) => {
@@ -112,27 +136,6 @@ export function CallAudioSection({ call, onUpload, onRetry }: CallAudioSectionPr
           }}
         />
       </div>
-    );
-  }
-
-  if (call.transcription_status === 'processing' || uploading) {
-    return (
-      <p className="mt-2 flex items-center gap-2 text-xs text-gray-400">
-        <Spinner /> מתמלל ומנתח את ההקלטה...
-      </p>
-    );
-  }
-
-  if (call.transcription_status === 'failed') {
-    return (
-      <button
-        type="button"
-        onClick={handleRetry}
-        className="mt-2 flex items-center gap-1.5 text-xs text-red-600 hover:underline"
-      >
-        <RefreshCw size={12} />
-        תמלול ההקלטה נכשל — נסה שוב
-      </button>
     );
   }
 
